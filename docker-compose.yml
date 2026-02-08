@@ -1,0 +1,24 @@
+services:
+  website:
+    image: si-inventario
+    build:
+      context: .
+      dockerfile: dockerfile
+    # platform: 'windows/amd64' # para plataforma WS2022
+    container_name: si-inventario-frontend
+    ports:
+      - "8100:80"
+    restart: always
+
+  server:
+    image: si-inventario-backend
+    build:
+      context: ../../SI-Inventario/SI-Inventario-Backend/si-inventario-backend
+      dockerfile: dockerfile
+    # platform: 'windows/amd64' # para plataforma WS2022
+    container_name: si-inventario-backend
+    ports:
+      - "8110:3010"
+    restart: always
+    env_file:
+      - "../../SI-Inventario/SI-Inventario-Backend/si-inventario-backend/.env"
