@@ -6,10 +6,11 @@ import {
 } from "@mui/material";
 import React from "react";
 import { Link } from "react-router-dom";
-import { useInventarioContext } from "../../context/Inventario.context";
+import { useInventarioContext } from "../context/Inventario.context";
+import type { SvgIconComponent } from "@mui/icons-material";
 
 type MenuItem = {
-    icon: React.ReactNode,
+    icon: SvgIconComponent,
     title: string,
     path: string,
 }
@@ -17,6 +18,7 @@ type MenuItem = {
 type Props = {
     open: boolean,
     items: MenuItem[],
+    inventory?: MenuItem[] | null
     onClose: () => void
 }
 
@@ -40,9 +42,10 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
     }
 }));
 
-export default function MiniAppDrawer({ open, items, onClose }: Props) {
+export default function MiniAppDrawer({ open, items, inventory, onClose }: Props) {
     const drawerWidth = 50;
     const [itemsState] = React.useState(items)
+    const [inventoriesModule] = React.useState(inventory)
     const { selected, setSelected } = useInventarioContext()
 
     return (
@@ -85,7 +88,7 @@ export default function MiniAppDrawer({ open, items, onClose }: Props) {
                                                 mr: 'auto'
                                             }]
                                         }>
-                                            {item.icon}
+                                            <item.icon></item.icon>
                                         </ListItemIcon>
                                     </StyledListItemButton>
                                 </ListItem>
@@ -98,7 +101,7 @@ export default function MiniAppDrawer({ open, items, onClose }: Props) {
                 <Box sx={{ flexGrow: 1 }} />
 
                 <List dense>
-                    {itemsState.map((item, i) => (
+                    {inventoriesModule?.map((item, i) => (
                         <Link key={i}
                             to={item.path}
                             onClick={() => setSelected({ title: item.title, path: item.path })}
@@ -113,7 +116,7 @@ export default function MiniAppDrawer({ open, items, onClose }: Props) {
                                                 mr: 'auto'
                                             }]
                                         }>
-                                            {item.icon}
+                                            <item.icon></item.icon>
                                         </ListItemIcon>
                                     </StyledListItemButton>
                                 </ListItem>

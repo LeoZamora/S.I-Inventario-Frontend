@@ -7,6 +7,9 @@ import { theme } from './theme/theme.ts'
 import { BrowserRouter } from 'react-router-dom'
 import axios from 'axios'
 import { LicenseInfo } from '@mui/x-license';
+import { PersistGate } from 'redux-persist/integration/react'
+import { persistor, store } from './appStore/store.ts'
+import { Provider } from 'react-redux'
 
 // Activa la licencia
 LicenseInfo.setLicenseKey(
@@ -24,7 +27,11 @@ createRoot(document.getElementById('root')!).render(
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
-        <App />
+      <Provider store={store}>
+          <PersistGate persistor={persistor}>
+            <App />
+          </PersistGate>
+      </Provider>
       </BrowserRouter>
     </ThemeProvider>
   </StrictMode>

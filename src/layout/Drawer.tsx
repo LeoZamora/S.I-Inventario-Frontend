@@ -13,12 +13,13 @@ import {
 
 import {
     Logout as LogoutIcon,
-    Inventory,
-    Home,
+    HomeRounded,
+    InventoryRounded,
+    CompareArrowsRounded
 } from "@mui/icons-material";
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useNavigationContext } from "../context/Inventario.context";
+import { useNavigationContext, useInventarioContext } from "../context/Inventario.context";
 
 type Props = {
     open: boolean,
@@ -30,22 +31,41 @@ type Props = {
 const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
     borderRadius: 5,
     margin: theme.spacing(0.5, 1),
+    transition: 'all 0.3s ease-in-out',
+    position: 'relative',
+    overflow: 'hidden',
     '&:hover': {
         backgroundColor: alpha(theme.palette.primary.main, 0.1),
     },
     '&.Mui-selected': {
         backgroundColor: alpha(theme.palette.primary.main, 0.15),
-        borderLeft: `4px solid ${theme.palette.primary.main}`,
         '& .MuiListItemIcon-root': {
             color: theme.palette.primary.main,
+            transition: 'color 0.3s ease'
         },
         '& .MuiListItemText-primary': {
             fontWeight: 600,
+        },
+        '::before': {
+            transform: 'scaleY(1)',
+            opacity: 1
         }
-    }
+    },
+    '&::before': {
+        content: '""',
+        position: 'absolute',
+        left: 0,
+        top: '15%',
+        height: '70%',
+        width: '4px',
+        backgroundColor: theme.palette.primary.main,
+        borderRadius: '0 4px 4px 0',
+        transform: 'scaleY(0)',
+        opacity: 0,
+        transition: 'transform 0.3s ease-in-out, opacity 0.2s ease-in-out',
+    },
 }));
 
-// Íconos con estilo moderno
 const StyledListItemIcon = styled(ListItemIcon)(() => ({
     minWidth: 40,
     color: "black",
@@ -54,19 +74,21 @@ const StyledListItemIcon = styled(ListItemIcon)(() => ({
 export default function AppDrawer({ open, drawerWidth, onClose }: Props) {
     const theme = useTheme();
     const { opcNavigation, setOpcNavigation } = useNavigationContext()
+    const { setSelected } = useInventarioContext()
     const [selectedOption, setSelectedOpc] = React.useState(opcNavigation?.title)
 
-  // Navegación principal
     const mainMenuItems = [
-        { text: 'Inicio', icon: <Home />,
+        { text: 'Inicio', icon: <HomeRounded />,
             selected: true, route: '/home'
         },
-        { text: 'Inventario', icon: <Inventory />,
-            selected: false, route: '/inventario', subRoute: '/inventario/productos'
+        { text: 'Inventario', icon: <InventoryRounded />,
+            selected: false, route: '/inventario', subRoute: '/inventario'
+        },
+        { text: 'M. Inventarios', icon: <CompareArrowsRounded />,
+            selected: false, route: '/movimientos-inventario', subRoute: null
         },
     ];
 
-    // Sección de usuario
     const userMenuItems = [
         { text: 'Cerrar Sesion', icon: <LogoutIcon /> },
     ]
@@ -74,10 +96,7 @@ export default function AppDrawer({ open, drawerWidth, onClose }: Props) {
     useEffect(() => {
         const lastOption = localStorage.getItem('lastOption');
 
-        // 1. Verificación de guardia: si ya es igual, no hacemos nada.
         if (opcNavigation?.title === lastOption) return;
-
-        // 2. Actualizamos ambos estados de una vez.
         const finalValue = lastOption ?? '';
 
         setOpcNavigation({
@@ -124,10 +143,10 @@ export default function AppDrawer({ open, drawerWidth, onClose }: Props) {
                             width: 80,
                             height: 80,
                             margin: '0 auto 16px',
-                            border: `3px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                             boxShadow: theme.shadows[3]
                         }}
-                        // src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop"
+                        src="https://sistemas.emprovisa.com.ni:9304/services/siaf/api/empleados/008085/foto"
                     />
                     <Typography variant="h6" fontWeight={600} sx={{
                         color: 'inherit'
@@ -175,6 +194,10 @@ export default function AppDrawer({ open, drawerWidth, onClose }: Props) {
                                 })
 
                                 localStorage.setItem('lastOption', item.text)
+                                setSelected({
+                                    title: '',
+                                    path: null
+                                })
                             }}
                         >
                             <ListItem disablePadding>
