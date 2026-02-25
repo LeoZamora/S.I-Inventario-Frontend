@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import RequestHttp from '../../services/requestHttp';
 import  { formateDate } from '../../helpers/helpers';
 import
     {
@@ -16,108 +15,55 @@ import {
     RemoveRedEyeOutlined
 } from '@mui/icons-material'
 import {
-    DataGridPremium, useGridApiRef,
+    DataGridPremium,
     ToolbarButton, GridActionsCellItem,
     GridActionsCell
 } from '@mui/x-data-grid-premium'
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { type GridCellParams } from '@mui/x-data-grid-premium'
-import { endPoints } from '../../services/endPoints';
+import { queries } from '../../services/endPoints';
 import CustomToolbar from '../ToolbarGrid';
 import CategoriaCreate from './categorias_components/CategoriaCreate';
-import KeepAliveRouteOutlet from 'keepalive-for-react-router';
+import RequestGraph from '../../services/requestGraph';
 
-const requstHttp = new RequestHttp
+const requestGraph = new RequestGraph
 
 type AnyRow = Record<string, unknown> & { id: string | number }
 
 const paginationModel = { page: 0, pageSize: 5 };
 
-// const headersSubCat: GridColDef[] = [{
-//         field: 'opc',
-//         headerAlign: 'center',
-//         align: 'center',
-//         sortable: false,
-//         disableExport: true,
-//         resizable: true,
-//         headerName: '',
-//         headerClassName:'header-classname',
-//         renderCell: () => {
-//             return (
-//                 <IconButton sx={{
-//                     height: '100%',
-//                     width: '100%'
-//                 }}>
-//                     <MoreVertRounded />
-//                 </IconButton>
-//             )
-//         }
-//     }, {
-//         field: 'nombre',
-//         headerAlign: 'center',
-//         align: 'center',
-//         resizable: true,
-//         headerName: 'Nombre SubCategoria',
-//     }, {
-//         field: 'descripcion',
-//         headerAlign: 'center',
-//         align: 'center',
-//         resizable: true,
-//         headerName: 'Descripcion',
-//     }, {
-//         field: 'fechaRegistro',
-//         headerAlign: 'center',
-//         align: 'center',
-//         resizable: true,
-//         headerName: 'Fecha Registro',
-//         renderCell: (params: GridCellParams) => {
-//             return (
-//                 <span>
-//                     { formateDate(String(params.value), true) }
-//                 </span>
-//             )
-//         }
-//     }, {
-//         field: 'usuarioRegistro',
-//         headerAlign: 'center',
-//         align: 'center',
-//         resizable: true,
-//         headerName: 'Usuario Registro',
-//     }, {
-//         field: 'estado',
-//         headerAlign: 'center',
-//         align: 'center',
-//         resizable: true,
-//         headerName: 'Estado',
-//         renderCell: (params: GridCellParams) => {
-//             return (
-//                 <Chip label={params.value ? 'Activo' : 'Inactivo'}
-//                     color={params.value ? 'success' : 'error'}
-//                     variant="outlined"
-//                 />
-//             )
-//         }
-//     },
-// ]
+async function getCategorias() {
+    try {
+        const result = await requestGraph.queryGraph(
+            queries.GET_CATEGORIAS,
+        )
+
+        return result.findAllCategories
+
+    } catch (error) {
+        console.error("Hubo un fallo", error);
+    }
+}
 
 export default function Categorias() {
+    const [idCategoria, setIdCategoria] = useState(null)
+    const [isEdit, setEdit] = useState(false)
     const navigate = useNavigate()
     const location = useLocation()
     const isRootPath = location.pathname === '/inventario/categorias'
     const [rows, setRows] = useState<AnyRow[]>([]);
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [openCreate, setOpenCreate] = useState(false);
-
     const [loading, setLoading] = useState(false);
-    const apiRef = useGridApiRef()
 
     const load = async (alive: boolean) => {
         try {
             setLoading(true);
-            const result = await requstHttp.getData(endPoints.getCategorias)
+            const result = await getCategorias()
             setLoading(false);
-            if (result.data?.code === 200) {
-                const data = result.data?.data
+
+            // if (result.data?.code === 200) {
+                const data = result
                 if (!alive) return
 
                 const mappedRows: AnyRow[] = data.map((item: GridColDef, i: number) => {
@@ -133,9 +79,9 @@ export default function Categorias() {
 
                 setRows(mappedRows.reverse())
                 setColumns(headersColumns)
-            }
+            // }
         } catch (error) {
-            console.error("Error cargando productos:", error);
+            console.error("Error cargando categorias:", error);
         } finally {
             if (alive) setLoading(false);
         }
@@ -150,14 +96,14 @@ export default function Categorias() {
         }
     }, [])
 
-    useEffect(() => {
-        if (!rows.length) return;
-        apiRef.current?.autosizeColumns({
-            includeHeaders: true,
-            includeOutliers: true,
-            expand: true,
-        })
-    }, [rows, apiRef, setLoading])
+    // useEffect(() => {
+    //     if (!rows.length) return;
+    //     apiRef.current?.autosizeColumns({
+    //         includeHeaders: true,
+    //         includeOutliers: true,
+    //         expand: true,
+    //     })
+    // }, [rows, apiRef, setLoading])
 
     const headersColumns: GridColDef[] = [{
         field: 'opc',
@@ -180,13 +126,18 @@ export default function Categorias() {
                     icon={<EditNoteOutlined />}
                     label="Editar"
                     showInMenu
-                    />
+                    onClick={() => {
+                        setEdit(true)
+                        setIdCategoria(params.row.idCategoria)
+                        setOpenCreate(true)
+                    }}
+                />
                 <GridActionsCellItem
                     icon={<RemoveRedEyeOutlined/>}
                     label="Ver detalles"
                     showInMenu
                     onClick={() => {
-                        navigate('/inventario/categorias/details')
+                        navigate(`${params.row.idCategoria}`)
                     }}
                 />
             </GridActionsCell>
@@ -246,7 +197,7 @@ export default function Categorias() {
 
     return (
         <>
-            <Box sx={{ display: isRootPath ? 'block' : 'none', width: '100%', height: '100%' }}>
+            <Box sx={{ width: '100%', height: '100vh' }}>
                 <Fade in>
                     <Container style={{  width: '100%', height: '100%'}} sx={{
                         "&.MuiContainer-root": {
@@ -254,72 +205,75 @@ export default function Categorias() {
                             minWidth: "100%"
                         }
                     }}>
-                        <Box sx={{
-                                height: '100vh',
-                                width: '100%',
-                                display: "flex",
-                                flexDirection: "column",
-                            }}
-                        >
-                            <DataGridPremium
-                                // apiRef={apiRef}
-                                rows={rows}
-                                density="compact"
-                                rowSpacingType="border"
-                                columns={columns}
-                                loading={loading}
-                                autosizeOnMount
-                                initialState={{pagination: { paginationModel } }}
-                                pageSizeOptions={[5, 10]}
-                                showToolbar
-                                slots={{
-                                    toolbar: CustomToolbar,
-                                }}
-                                slotProps={{
-                                    loadingOverlay: {
-                                        variant: 'skeleton',
-                                        noRowsVariant: 'skeleton',
-                                    },
-                                    toolbar: {
-                                        title: 'CATEGORIAS Y SUBCATEGORIAS',
-                                        addButton: (
-                                            <Tooltip title="Nueva Categoria">
-                                                <ToolbarButton onClick={() => setOpenCreate(true)}>
-                                                    <AddRounded/>
-                                                </ToolbarButton>
-                                            </Tooltip>
-                                        )
-                                    },
-                                }}
-                                sx={{
-                                    borderRadius: 0,
-                                    borderLeft: 0,
-                                    borderRight: 0,
-                                    flexGrow: 1,
-                                    width: '100%',
-                                    "& .MuiDataGrid-main": { width: '100%' },
-                                    "&::-webkit-scrollbar": {
-                                        width: "5px",
-                                        display: 'none'
-                                    },
-                                }}
-                            />
-                        </Box>
-                        <CategoriaCreate open={openCreate} onClose={() => {
-                            setOpenCreate(false);
-                            load(true)
-                        }} />
+                        { isRootPath ? <>
+                            <Fade in>
+                                <Box sx={{
+                                        height: 520,
+                                        width: '100%',
+                                    }}
+                                >
+                                    <DataGridPremium
+                                        rows={rows}
+                                        density="compact"
+                                        rowSpacingType="border"
+                                        columns={columns}
+                                        loading={loading}
+                                        initialState={{pagination: { paginationModel } }}
+                                        pageSizeOptions={[5, 10]}
+                                        showToolbar
+                                        slots={{
+                                            toolbar: CustomToolbar,
+                                        }}
+                                        slotProps={{
+                                            loadingOverlay: {
+                                                variant: 'skeleton',
+                                                noRowsVariant: 'skeleton',
+                                            },
+                                            toolbar: {
+                                                title: 'CATEGORIAS Y SUBCATEGORIAS',
+                                                addButton: (
+                                                    <Tooltip title="Nueva Categoria">
+                                                        <ToolbarButton onClick={() => {
+                                                            setOpenCreate(true)
+                                                            setEdit(false)
+                                                        }}>
+                                                            <AddRounded/>
+                                                        </ToolbarButton>
+                                                    </Tooltip>
+                                                )
+                                            },
+                                        }}
+                                        sx={{
+                                            borderRadius: 0,
+                                            borderLeft: 0,
+                                            borderRight: 0,
+                                            flexGrow: 1,
+                                            width: '100%',
+                                            "& .MuiDataGrid-main": { width: '100%' },
+                                            "&::-webkit-scrollbar": {
+                                                width: "5px",
+                                                display: 'none'
+                                            },
+                                        }}
+                                    />
+                                </Box>
+                            </Fade>
+                            <CategoriaCreate open={openCreate} onClose={() => {
+                                setOpenCreate(false);
+                                setEdit(false)
+                                load(true)
+                            }} idCategoria={idCategoria} isEdit={isEdit} />
+                        </> : <>
+                            <Fade in>
+                                <Box sx={{ width: '100%', height: '100%' }}>
+                                    <Outlet />
+                                </Box>
+                            </Fade>
+                        </>}
                     </Container>
                 </Fade>
             </Box>
 
-            {!isRootPath && (
-                <Fade in>
-                    <Box>
-                        <KeepAliveRouteOutlet />
-                    </Box>
-                </Fade>
-            )}
         </>
     );
 }

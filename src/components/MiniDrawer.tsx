@@ -17,6 +17,7 @@ type MenuItem = {
 
 type Props = {
     open: boolean,
+    show: boolean,
     items: MenuItem[],
     inventory?: MenuItem[] | null
     onClose: () => void
@@ -42,14 +43,16 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
     }
 }));
 
-export default function MiniAppDrawer({ open, items, inventory, onClose }: Props) {
+export default function MiniAppDrawer({ open, show, items, inventory, onClose }: Props) {
     const drawerWidth = 50;
     const [itemsState] = React.useState(items)
     const [inventoriesModule] = React.useState(inventory)
     const { selected, setSelected } = useInventarioContext()
 
     return (
-        <Box>
+        <Box sx={{
+            display: show ? 'block' : 'none'
+        }}>
             <Drawer
                 variant="persistent"
                 anchor="right"
