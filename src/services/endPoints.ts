@@ -109,5 +109,37 @@ export const queries = {
                 fechaRegistro
             }
         }
+    `,
+    GET_CATEGORIAS: `
+        query {
+            findAllCategories {
+                idCategoria
+                codigoSubCategoria
+                nombreCategoria
+                descripcion
+                fechaRegistro
+                usuarioRegistro
+            }
+        }
+    `,
+    GET_CATEGORIA_BY_ID: `
+        query GetCategory($idCategoria: Int!) {
+            finCategoryById(idCategoria: $idCategoria) {
+                idCategoria
+                nombreCategoria
+                descripcion
+                fechaRegistro
+                usuarioRegistro
+                codigoSubCategoria
+                subCategorias {
+                    idSubCategoria
+                    nombre
+                    codigoSubCategoria
+                    fechaRegistro
+                    usuarioRegistro
+                    descripcion
+                }
+            }
+        }
     `
 }

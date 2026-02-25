@@ -4,14 +4,13 @@ import React,{
     useRef,
     useState,
 } from "react";
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
     Box,Toolbar, Breadcrumbs, Typography,
     Fade
 } from "@mui/material";
 import AppDrawer from "./Drawer";
 import AppBarLayout from "./AppBar";
-import KeepAliveRouteOutlet from 'keepalive-for-react-router'
 import logo from '../assets/Logos Grupo ENE/emprovisa.svg'
 import MiniAppDrawer from "../components/MiniDrawer";
 import {
@@ -82,7 +81,6 @@ export default function AppShell({drawerWidth = 230}: Props) {
                             overflow: "scroll",
                             height: `92vh`,
                             boxShadow: (t) => t.shadows[5],
-                            // border: '1px solid #e0e0e0',
                             transition: theme =>
                             theme.transitions.create(['margin', 'width'], {
                                 easing: theme.transitions.easing.easeIn,
@@ -118,20 +116,23 @@ export default function AppShell({drawerWidth = 230}: Props) {
                         </Breadcrumbs>
 
                         <Fade in>
-                            <Box>
-                                <KeepAliveRouteOutlet transition viewTransition duration={100}/>
+                            <Box sx={{
+                                height: '100vh',
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}>
+                                <Outlet />
                             </Box>
                         </Fade>
                     </Box>
 
-                    { showMiniDrawer && (
-                        <MiniAppDrawer
-                            open={open}
-                            items={subModuleInventario}
-                            inventory={inventarios}
-                            onClose={() => setOpen(false)}
-                        />
-                    )}
+                    <MiniAppDrawer
+                        open={open}
+                        show={showMiniDrawer}
+                        items={subModuleInventario}
+                        inventory={inventarios}
+                        onClose={() => setOpen(false)}
+                    />
                 </Box>
             </InventarioContext.Provider>
         </NavigationContext.Provider>

@@ -33,7 +33,7 @@ const routes = [
                 element: <Categorias />,
                 children: [
                     {
-                        path: 'details',
+                        path: ':id',
                         element: <DetailsCategory />
                     }
                 ]
@@ -60,7 +60,6 @@ const routes = [
         path: 'movimientos-inventario',
         component: <UnderConstruction />,
         pathnameBase: 'Movimientos de Inventario',
-        // indexRedirectTo: "productos",
         children: []
     },
 ]

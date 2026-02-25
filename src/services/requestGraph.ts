@@ -9,7 +9,6 @@ export default class RequestGraph {
             variables: variables
         })
 
-        // GraphQL siempre devuelve 200 OK, los errores vienen dentro de result.data.errors
         if (result.data.errors) {
             console.error("Errores de GraphQL:", result.data.errors);
             throw new Error("Error en la consulta");

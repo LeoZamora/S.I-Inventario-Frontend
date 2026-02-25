@@ -38,7 +38,7 @@ const shake = keyframes`
 
 const usuarioRegistro: string = 'dba'
 
-export default function CategoriaCreate({ open = false, onClose, isEdit, idCategoria }: Props) {
+export default function SubCategoriaCreate({ open = false, onClose, isEdit, idCategoria }: Props) {
     const {
         control, handleSubmit,
         reset,
@@ -48,6 +48,7 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
         defaultValues: { nombre: '', codigo: ''}
     })
     const [shakeDialog, setShakeDialog] = useState(false)
+    const title = isEdit ? 'Editar SubCategoria' : 'Nueva SubCategoría'
 
     async function onSubmit(data: FormProps) {
         try {
@@ -148,7 +149,7 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
                     }
                 }}
             >
-                Nueva Categoría
+                {title}
             </DialogTitle>
             <DialogContent sx={{
                     pt: 2,
