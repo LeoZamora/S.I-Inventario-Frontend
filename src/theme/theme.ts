@@ -13,7 +13,7 @@ export const theme = createTheme({
             // default: "#f5f5f5",
             default: 'rgba(252, 252, 252)'
             // paper: "#0f172a"
-        }
+        },
     },
     typography: {
         fontFamily: ['Poppins', 'system-ui', 'Segoe UI', 'Roboto', 'Arial'].join(',')

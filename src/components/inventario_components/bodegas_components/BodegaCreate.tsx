@@ -4,32 +4,31 @@ import {
     Button, Grid, MenuItem,
     Select, InputLabel, Fade,
     FormControl, FormHelperText, Tooltip
-    // useMediaQuery
 } from "@mui/material";
+import { keyframes } from "@mui/system";
+import { IOSSwitch } from "../../../reusable/Switch";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { validationSchema } from "../../../config/schema.validation";
 import { z } from 'zod'
-import type { SubCategoria } from "../../../helpers/interfaces";
+import type { Bodegas } from "../../../helpers/interfaces";
 import RequestHttp from "../../../services/requestHttp";
 import RequestGraph from "../../../services/requestGraph";
 import { queries } from "../../../services/endPoints";
-import { keyframes } from "@mui/system";
-import { IOSSwitch } from "../../../reusable/Switch";
 
 type Props = {
     open: boolean;
     onClose: () => void;
     isEdit: boolean;
-    idSubCategoria: number | null
-    idCategoria: number | null
+    idBodega: number | null
+    idUbicacion: number
 }
 
 const requestHttp = new RequestHttp
 const requestGraph = new RequestGraph
 
-type FormProps = z.infer<typeof validationSchema.subCategoriasSchema>
+type FormProps = z.infer<typeof validationSchema.bodegasSchema>
 
 const shake = keyframes`
     0% { transform: translateX(0); }
@@ -40,59 +39,49 @@ const shake = keyframes`
     100% { transform: translateX(0); }
 `;
 
-const usuarioRegistro: string = 'dba'
 
-export default function SubCategoriaCreate({
+export default function BodegaCreate({
     open = false,
     onClose,
     isEdit,
-    idSubCategoria,
-    idCategoria
+    idBodega,
+    idUbicacion
 }: Props) {
+    const usuarioRegistro: string = 'dba'
     const {
         control, handleSubmit,
         reset,
         formState: { errors }
     } = useForm({
-        resolver: zodResolver(validationSchema.subCategoriasSchema),
+        resolver: zodResolver(validationSchema.bodegasSchema),
         defaultValues: {
-            nombre: '',
+            nombreBodega: '',
+            usuarioRegistro: usuarioRegistro,
             descripcion: '',
-            idCategoria: 0,
-            codigoProducto: ''
+            idUbicacion: Number(idUbicacion)
         }
     })
-    const [categorias, setCategoria] = useState([])
-    const [codigoSubCat, setCodigo] = useState(null)
+
+    const [ubicacion, setUbicacion] = useState([])
+    const [codigoBodega, setCodigo] = useState(null)
     const [shakeDialog, setShakeDialog] = useState(false)
-    const [estadoSubCat, setEstado] = useState(false)
-    const title = isEdit ? 'Editar SubCategoria' : 'Nueva SubCategoría'
+    const [loading, setLoading] = useState(false)
+    const [estadoBodega, setEstado] = useState(false)
+    const title = isEdit ? 'Editar Bodega' : 'Nueva Bodega'
 
     async function onSubmit(data: FormProps) {
         try {
-            const dataForm: SubCategoria = {
-                nombre: data.nombre,
+            const dataForm: Bodegas = {
+                codigoBodega: data.codigoBodega,
+                nombreBodega: data.nombreBodega,
                 descripcion: data.descripcion ?? null,
-                idCategoria: data.idCategoria,
-                codigoSubCategoria: data.codigo,
-                codigoProducto:  data.codigoProducto,
-                usuarioRegistro: usuarioRegistro
+                idUbicacion: data.idUbicacion,
+                usuarioRegistro: data.usuarioRegistro
             }
 
-            const dataEdit: SubCategoria = {
-                nombre: data.nombre,
-                descripcion: data.descripcion ?? null,
-                idCategoria: data.idCategoria,
-                codigoProducto:  data.codigoProducto,
-            }
-
-            let result;
-
-            if (!isEdit) {
-                result = await requestHttp.postSubCategoria(dataForm)
-            } else {
-                result = await requestHttp.putSubCategoria(Number(idSubCategoria), dataEdit)
-            }
+            setLoading(true)
+            const result = await requestHttp.postBodega(dataForm)
+            setLoading(false)
 
             if (result?.code === 200) {
                 onClose()
@@ -104,29 +93,29 @@ export default function SubCategoriaCreate({
 
 
     useEffect(() => {
-        async function getSubCategoriasById(id: number | null) {
+        async function getBodegaById(id: number | null) {
             if (!id) return
 
             try {
                 const result = await requestGraph.queryGraph(
-                    queries.GET_SUBCATEGORIA_BY_ID,
-                    { idSubCategoria: id }
+                    queries.GET_BODEGA_BY_ID,
+                    { idBodega: id }
                 )
 
-                const subCategoria = result?.finSubCategoryById
+                const bodega = result?.findBodegaById
 
-                if (subCategoria) {
-                    if (subCategoria.estado === 1) {
+                if (bodega) {
+                    if (bodega.estado === 1) {
                         setEstado(true)
                     } else {
                         setEstado(false)
                     }
                     reset({
-                        nombre: subCategoria.nombre,
-                        codigo: subCategoria.codigoSubCategoria,
-                        idCategoria: subCategoria.idCategoria,
-                        codigoProducto: subCategoria.codigoProducto,
-                        descripcion: subCategoria.descripcion
+                        nombreBodega: bodega.nombreBodega,
+                        codigoBodega: bodega.codigoBodega,
+                        idUbicacion: bodega.idUbicacion,
+                        usuarioRegistro: bodega.usuarioRegistro,
+                        descripcion: bodega.descripcion
                     })
                 }
 
@@ -134,40 +123,41 @@ export default function SubCategoriaCreate({
                 console.log(error);
             }
         }
-        async function getCategorias() {
+
+        async function getUbicaciones() {
             try {
                 const result = await requestGraph.queryGraph(
-                    queries.GET_CATEGORIA_COMBOBOX,
+                    queries.GET_UBICACIONES_COMBOBOX,
                 )
 
-                const code = await requestHttp.getCodigoSubCategoria(Number(idCategoria))
-                setCodigo(code?.code)
+                const code = await requestHttp.getCodigoLogistica('bodega')
+                setCodigo(code)
 
-                const categoria = result?.findAllCategories
+                const ubicaciones = result?.findAllUbicaciones
 
-                if (categoria) {
-                    setCategoria(categoria)
+                if (ubicaciones) {
+                    setUbicacion(ubicaciones)
                 }
             } catch (error) {
                 console.log(error);
             }
         }
 
-        getCategorias()
+        getUbicaciones()
 
         if (isEdit) {
-            getSubCategoriasById(idSubCategoria)
+            getBodegaById(idBodega)
         } else {
             reset({
-                nombre: '',
-                codigo: codigoSubCat ?? '',
-                codigoProducto: '',
-                idCategoria: Number(idCategoria),
+                nombreBodega: '',
+                codigoBodega: codigoBodega ?? '',
+                idUbicacion: Number(idUbicacion),
+                usuarioRegistro: usuarioRegistro,
                 descripcion: ''
             })
         }
 
-    }, [isEdit, idSubCategoria, reset, codigoSubCat, idCategoria])
+    }, [isEdit, reset, idBodega, codigoBodega, idUbicacion])
 
     return (
         // fullScreen={fullScreen}
@@ -185,10 +175,10 @@ export default function SubCategoriaCreate({
             onClose?.()
 
             reset({
-                nombre: '',
-                codigo: codigoSubCat ?? '',
-                codigoProducto: '',
-                idCategoria: Number(idCategoria),
+                nombreBodega: '',
+                codigoBodega: codigoBodega ?? '',
+                usuarioRegistro: usuarioRegistro,
+                idUbicacion: Number(idUbicacion),
                 descripcion: ''
             })
         }}
@@ -237,7 +227,7 @@ export default function SubCategoriaCreate({
                             },
                         }}
                     >
-                        <IOSSwitch sx={{ m: 1 }} checked={estadoSubCat} />
+                        <IOSSwitch sx={{ m: 1 }} checked={estadoBodega} />
                     </Tooltip>
                 </Box>
             </DialogTitle>
@@ -250,7 +240,7 @@ export default function SubCategoriaCreate({
                 }}
             >
                 <Box component="form"
-                    id="subscription-form"
+                    id="bodega-form"
                     onSubmit={handleSubmit(onSubmit)}
                     sx={{
                         display: 'flex',
@@ -263,18 +253,18 @@ export default function SubCategoriaCreate({
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 12, md: 12, lg: 12 }}>
                             <Controller
-                                name="codigo"
+                                name="codigoBodega"
                                 control={control}
                                 render={({ field }) => (
                                     <TextField
                                         {...field}
-                                        id="codigo"
+                                        id="codigoBodega"
                                         type="text"
                                         size="small"
-                                        label="Código de la SubCategoría"
-                                        placeholder="Ingrese el código de la subcategoría"
-                                        error={!!errors.codigo}
-                                        helperText={errors.codigo?.message}
+                                        label="Código de la Bodega"
+                                        placeholder="Ingrese el código de la bodega"
+                                        error={!!errors.codigoBodega}
+                                        helperText={errors.codigoBodega?.message}
                                         fullWidth
                                         variant="outlined"
                                         slotProps={{
@@ -298,18 +288,18 @@ export default function SubCategoriaCreate({
 
                         <Grid size={{ xs: 12, md: 12, lg: 12 }}>
                             <Controller
-                                name="nombre"
+                                name="nombreBodega"
                                 control={control}
                                 render={({ field }) => (
                                     <TextField
                                         {...field}
-                                        id="nombre"
+                                        id="nombreBodega"
                                         type="text"
                                         size="small"
-                                        label="Nombre de la Categoría"
-                                        placeholder="Ingrese el nombre de la categoría"
-                                        error={!!errors.nombre}
-                                        helperText={errors.nombre?.message}
+                                        label="Nombre de la Bodega"
+                                        placeholder="Ingrese el nombre de la bodega"
+                                        error={!!errors.nombreBodega}
+                                        helperText={errors.nombreBodega?.message}
                                         fullWidth
                                         variant="outlined"
                                         slotProps={{
@@ -330,49 +320,17 @@ export default function SubCategoriaCreate({
 
                         <Grid size={{ xs: 12, md: 12, lg: 12 }}>
                             <Controller
-                                name="codigoProducto"
+                                name="idUbicacion"
                                 control={control}
                                 render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        id="codigoProducto"
-                                        type="text"
-                                        size="small"
-                                        label="Código para Productos"
-                                        placeholder="Ingrese el código para los productos"
-                                        error={!!errors.codigoProducto}
-                                        helperText={errors.codigoProducto?.message}
-                                        fullWidth
-                                        variant="outlined"
-                                        slotProps={{
-                                            inputLabel: {
-                                                shrink: true
-                                            }
-                                        }}
-                                        sx={{
-                                            "& .MuiOutlinedInput-root": {
-                                                borderRadius: 0.5
-                                            }
-                                        }}
-                                    />
-                                )}
-
-                            />
-                        </Grid>
-
-                        <Grid size={{ xs: 12, md: 12, lg: 12 }}>
-                            <Controller
-                                name="idCategoria"
-                                control={control}
-                                render={({ field }) => (
-                                    <FormControl fullWidth error={!!errors.idCategoria}>
-                                        <InputLabel>Categorias</InputLabel>
+                                    <FormControl fullWidth error={!!errors.idUbicacion}>
+                                        <InputLabel>Ubicaciones</InputLabel>
                                         <Select
                                             {...field}
-                                            id="idCategoria"
-                                            label="Categorias"
+                                            id="idUbicacion"
+                                            label="Ubicaciones"
                                             size="small"
-                                            error={!!errors.idCategoria}
+                                            error={!!errors.idUbicacion}
                                             sx={{
                                                 "&.MuiOutlinedInput-root": {
                                                     borderRadius: 0.5
@@ -385,20 +343,20 @@ export default function SubCategoriaCreate({
                                             }}
                                         >
                                             <MenuItem value={0}>
-                                                <em>Elija una categoria</em>
+                                                <em>Elija una ubicación</em>
                                             </MenuItem>
-                                            {categorias?.map((item: {
-                                                idCategoria: number,
-                                                nombreCategoria: string,
-                                                descripcion: string
+                                            {ubicacion?.map((item: {
+                                                idUbicacion: number,
+                                                nombreUbicacion: string,
+                                                codigoUbicacion: string
                                             }) => (
-                                                <MenuItem defaultValue={1} value={item.idCategoria}>
-                                                    { item.nombreCategoria }
+                                                <MenuItem defaultValue={1} value={item.idUbicacion}>
+                                                    { item.nombreUbicacion }
                                                 </MenuItem>
                                             ))}
                                         </Select>
                                         <FormHelperText>
-                                            {errors.idCategoria?.message}
+                                            {errors.idUbicacion?.message}
                                         </FormHelperText>
                                     </FormControl>
                                 )}
@@ -419,8 +377,8 @@ export default function SubCategoriaCreate({
                                         maxRows={4}
                                         error={!!errors.descripcion}
                                         helperText={errors.descripcion?.message}
-                                        label="Descripción de la Categoría"
-                                        placeholder="Ingrese la descripción de la categoría"
+                                        label="Descripción de la bodega"
+                                        placeholder="Ingrese la descripción de la bodega"
                                         fullWidth
                                         variant="outlined"
                                         slotProps={{
@@ -445,10 +403,10 @@ export default function SubCategoriaCreate({
                 <Button onClick={() => {
                     onClose()
                     reset({
-                        nombre: '',
-                        codigo: codigoSubCat ?? '',
-                        codigoProducto: '',
-                        idCategoria: Number(idCategoria),
+                        nombreBodega: '',
+                        usuarioRegistro: usuarioRegistro,
+                        codigoBodega: codigoBodega ?? '',
+                        idUbicacion: Number(idUbicacion),
                         descripcion: ''
                     })
                 }} color="secondary"
@@ -460,8 +418,9 @@ export default function SubCategoriaCreate({
                 >
                     Cancelar
                 </Button>
-                <Button type="submit" form="subscription-form"
+                <Button type="submit" form="bodega-form"
                     variant="contained"
+                    disabled={loading}
                     sx={{
                         "&.MuiButtonBase-root": {
                             borderRadius: .5

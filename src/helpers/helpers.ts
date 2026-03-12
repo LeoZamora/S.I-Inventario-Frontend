@@ -29,3 +29,14 @@ export function formatCurrency(key: number, currency: string) {
         currency: currency === 'USD' ? 'USD' : 'NIO',
     }).format(key)
 }
+
+export const generatePath = (text: string) => {
+    return text
+        .toLocaleLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w\s-]/g, "")
+        .replace("de", "")
+        .replace(/\s+/g, "-")
+        .trim()
+}

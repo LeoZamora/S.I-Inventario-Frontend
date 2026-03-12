@@ -7,12 +7,11 @@ import React,{
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
     Box,Toolbar, Breadcrumbs, Typography,
-    Fade
 } from "@mui/material";
 import AppDrawer from "./Drawer";
 import AppBarLayout from "./AppBar";
-import logo from '../assets/Logos Grupo ENE/emprovisa.svg'
-import MiniAppDrawer from "../components/MiniDrawer";
+import logo from '../assets/logo.png'
+import MiniAppDrawer from "./MiniDrawer";
 import {
     InventarioContext,
     NavigationContext,
@@ -57,8 +56,8 @@ export default function AppShell({drawerWidth = 230}: Props) {
                 <Box
                     ref={layoutRef}
                     sx={{
-                        display: 'flex',
-                        height: '80vh'
+                        display: "flex",
+                        height: '100%'
                     }}
                 >
                     <AppBarLayout
@@ -79,13 +78,17 @@ export default function AppShell({drawerWidth = 230}: Props) {
                         sx={{
                             flexGrow: 1,
                             overflow: "scroll",
-                            height: `92vh`,
-                            boxShadow: (t) => t.shadows[5],
+                            height: `100%`,
+                            width: '100%',
+                            backgroundColor: 'white',
                             transition: theme =>
                             theme.transitions.create(['margin', 'width'], {
                                 easing: theme.transitions.easing.easeIn,
                                 duration: theme.transitions.duration.shortest,
                             }),
+                            "& .MuiBox-root": {
+                                backgroundColor: 'white'
+                            },
                             "&::-webkit-scrollbar": {
                                 width: "5px",
                                 display: 'none'
@@ -100,7 +103,6 @@ export default function AppShell({drawerWidth = 230}: Props) {
                             "&::-webkit-scrollbar-thumb:hover": {
                                 backgroundColor: "transparent",
                             },
-                            borderRadius: 1,
                         }}
                     >
                         <Breadcrumbs aria-label="breadcrumb" sx={{
@@ -115,15 +117,18 @@ export default function AppShell({drawerWidth = 230}: Props) {
                             </Typography>
                         </Breadcrumbs>
 
-                        <Fade in>
+                        {/* <Fade in>
                             <Box sx={{
-                                height: '100vh',
+                                height: '100%',
                                 display: 'flex',
                                 flexDirection: 'column',
+                                "& .MuiBox-root": {
+                                    backgroundColor: 'white'
+                                }
                             }}>
-                                <Outlet />
                             </Box>
-                        </Fade>
+                        </Fade> */}
+                        <Outlet />
                     </Box>
 
                     <MiniAppDrawer

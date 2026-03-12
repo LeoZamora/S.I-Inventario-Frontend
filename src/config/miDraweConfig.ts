@@ -2,9 +2,7 @@ import {
     CategoryRounded,
     InventoryRounded,
     PeopleOutlineRounded,
-    DevicesRounded,
-    MilitaryTechRounded,
-    ChairRounded,
+    Inventory2Rounded,
     WarehouseRounded,
     LabelOutlined
 } from '@mui/icons-material'
@@ -31,25 +29,15 @@ export function inventarioModuleConfig() {
 
         inventarios: [
             {
-                icon: DevicesRounded,
-                title: 'Inventario de IT',
-                path: '/inventario/informatica'
-            },
-            {
-                icon: MilitaryTechRounded,
-                title: 'Inventario de Armas',
-                path: '/inventario/armas'
-            },
-            {
-                icon: ChairRounded,
-                title: 'Mobiliario',
-                path: '/inventario/categorias'
+                icon: Inventory2Rounded,
+                title: 'Inventario de Productos',
+                path: '/inventario/productos'
             },
         ],
 
         miniDrawerInv: [
             '/inventario/inventarios',
-            '/inventario/informatica',
+            '/inventario/productos',
             '/inventario/categorias',
             '/inventario/proveedores',
             '/inventario/armas',

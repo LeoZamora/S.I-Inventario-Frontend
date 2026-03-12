@@ -18,7 +18,7 @@ import {
     GridActionsCellItem, GridActionsCell
 } from '@mui/x-data-grid-premium'
 import { type GridCellParams } from '@mui/x-data-grid-premium'
-import CustomToolbar from '../ToolbarGrid';
+import CustomToolbar from '../../reusable/ToolbarGrid';
 import RequestGraph from '../../services/requestGraph';
 import { queries } from '../../services/endPoints';
 import { ChartsRenderer, configurationOptions } from '@mui/x-charts-premium'
@@ -176,13 +176,11 @@ export default function Proveedores() {
     useEffect(() => {
         if (!rows.length) return;
 
-apiRef.current?.autosizeColumns({
+    apiRef.current?.autosizeColumns({
                 includeHeaders: true,
                 includeOutliers: true,
                 expand: true
             })
-
-        
     }, [rows, apiRef])
 
     return (

@@ -64,10 +64,10 @@ export default function MiniAppDrawer({ open, show, items, inventory, onClose }:
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         backgroundColor: 'transparent',
-                        // backgroundColor: '#F5F5F5',
                         boxSizing: 'border-box',
                         display: open ? 'flex' : 'none',
-                        border: 0
+                        border: '1px solid',
+                        borderColor: 'divider',
                     },
                     transition: (t) => t.transitions.create('width', {
                         duration: t.transitions.duration.shortest,
@@ -82,7 +82,14 @@ export default function MiniAppDrawer({ open, show, items, inventory, onClose }:
                             onClick={() => setSelected({ title: item.title, path: item.path })}
                         >
                             <Tooltip key={i} title={item.title} arrow placement="left"
-                                >
+                                slotProps={{
+                                    tooltip: {
+                                        sx: {
+                                            borderRadius: 0.5
+                                        }
+                                    }
+                                }}
+                            >
                                 <ListItem disablePadding dense>
                                     <StyledListItemButton selected={selected?.path === item.path}>
                                         <ListItemIcon sx={[{
@@ -110,7 +117,14 @@ export default function MiniAppDrawer({ open, show, items, inventory, onClose }:
                             onClick={() => setSelected({ title: item.title, path: item.path })}
                         >
                             <Tooltip key={i} title={item.title} arrow placement="left"
-                                >
+                                slotProps={{
+                                    tooltip: {
+                                        sx: {
+                                            borderRadius: 0.5
+                                        }
+                                    }
+                                }}
+                            >
                                 <ListItem disablePadding dense>
                                     <StyledListItemButton selected={selected?.path === item.path}>
                                         <ListItemIcon sx={[{
