@@ -1,6 +1,6 @@
 import axios from "axios";
 import { endPoints } from "./endPoints";
-import type { Categoria } from "../helpers/interfaces";
+import type { Bodegas, Categoria, InventarioQL, Producto, SubCategoria, TipoProducto, Ubicacion } from "../helpers/interfaces";
 
 export default class RequestHttp {
     constructor() {}
@@ -13,7 +13,200 @@ export default class RequestHttp {
         try {
             const result = await axios.post(endPoints.postCatgoria, data)
             return {
-                code: result.data?.code,
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    // CATEGORIAS Y SUBCATEGORIAS
+    async getCodigoSubCategoria(id: number) {
+        try {
+            const result = await axios.get(`${endPoints.getCodigoSubCategoria}/${id}`)
+            return {
+                code: result.data,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async postSubCategoria(data: SubCategoria) {
+        try {
+            const result = await axios.post(endPoints.postSubCategoria, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async putSubCategoria(id: number, data: SubCategoria) {
+        try {
+            const result = await axios.put(`${endPoints.postSubCategoria}/${id}`, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    // PRODUCTOS
+        async postProducto(data: Producto) {
+        try {
+            const result = await axios.post(endPoints.postProducto, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async getCodigoProducto(id: number) {
+        try {
+            const result = await axios.get(`${endPoints.getCodigoProducto}/${id}`)
+            return {
+                code: result.data,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+
+    // TIPOS DE PRODUCTOS
+    async postTipoProducto(data: TipoProducto) {
+        try {
+            const result = await axios.post(endPoints.postTipoProducto, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    // LOGISTICA
+    async postUbicacion(data: Ubicacion) {
+        try {
+            const result = await axios.post(endPoints.postUbicacion, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async postBodega(data: Bodegas) {
+        try {
+            const result = await axios.post(endPoints.postBodega, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async getCodigoLogistica(tipo: string) {
+        const url = tipo === 'ubicacion' ? endPoints.getCodigoUbicacion
+            : endPoints.getCodigoBodega
+        try {
+            const result = await axios.get(url)
+            return result.data
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+
+    // INVENTARIOS
+    async postInventarios(data: InventarioQL) {
+        try {
+            const result = await axios.post(endPoints.postInventario, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async getCodigoInventario() {
+        try {
+            const result = await axios.get(endPoints.getCodigoInventario)
+            return {
+                code: result.data,
                 msg: result.data?.msg,
             }
         } catch (error: unknown) {

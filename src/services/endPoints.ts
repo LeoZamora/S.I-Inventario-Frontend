@@ -1,12 +1,30 @@
 export const endPoints = {
-    // Inventario
+    // INVENTARIOS
     getProductos: 'inventario/productos',
+    getCodigoInventario: 'inventario/codigo-recomendado',
+    postInventario: 'inventario',
+
+    // CATEGORIAS
     getCategorias: 'categoria',
     getSubCategoria: 'categoria/sub-categorias',
-    postCatgoria: 'categoria'
+    postSubCategoria: 'categoria/sub-categoria',
+    postCatgoria: 'categoria',
+    postTipoProducto: 'productos/tipoProducto',
+    getCodigoSubCategoria: 'categoria/sub-categoria/codigo',
+
+    // LOGISTICA
+    postUbicacion: 'logistica/ubicacion',
+    postBodega: 'logistica/bodega',
+    getCodigoUbicacion: 'logistica/ubicacion/codigo-recomendado',
+    getCodigoBodega: 'logistica/bodega/codigo-recomendado',
+
+    // PRODUCTOS
+    getCodigoProducto: 'productos/codigo-recomendado',
+    postProducto: 'productos',
 }
 
 export const queries = {
+    // PRODUCTOS
     GET_PRODUCTS: `
         query GetProductos($id: Int!) {
             findProductos(id: $id) {
@@ -38,6 +56,75 @@ export const queries = {
             }
         }
     `,
+    GET_PRODUCTOS: `
+        query {
+            findAllProductos {
+                idProducto
+                codigoProducto
+                nombreProducto
+                precio
+                marca
+                modelo
+                precio
+                estado
+                subCategoria {
+                    idSubCategoria
+                    nombre
+                    categoria {
+                        nombreCategoria
+                    }
+                }
+                inventarioProductos {
+                    stockMin
+                    stockMax
+                    stock
+                }
+                tipoProducto {
+                    nombre
+                }
+                fechaRegistro
+                usuarioRegistro
+            }
+        }
+    `,
+    GET_TIPO_PRODUCTOS: `
+        query {
+            findTipoProducto {
+                idTipoProducto,
+                nombre,
+                descripcion,
+                estado,
+                fechaRegistro,
+                usuarioRegistro
+            }
+        }
+	`,
+    GET_TIPO_PRODUCTOS_COMBOBOX: `
+        query {
+            findTipoProducto {
+                idTipoProducto,
+                nombre,
+                descripcion,
+            }
+        }
+	`,
+    GET_TIPOPROD_BY_ID: `
+        query GetTipoProd($idTipoProducto: Int!) {
+            findTipoProductoById(idTipoProducto: $idTipoProducto) {
+                idTipoProducto
+                nombre
+                descripcion
+                fechaRegistro
+                usuarioRegistro
+                estado
+                bodegas {
+
+                }
+            }
+        }
+    `,
+
+    // PROVEEDORES
     GET_PROVIDERS: `
         query {
             findAllProveedores {
@@ -56,18 +143,46 @@ export const queries = {
             }
         }
     `,
-    GET_TIPOPRODUCTOS: `
+
+    // DEPARTAMENTOS
+    GET_DEPARTAMENTOS: `
         query {
-            findTipoProducto {
-                idTipoProducto,
-                nombre,
-                descripcion,
-                estado,
-                fechaRegistro,
+            findDepartamentos {
+                idDepartamento
+                codigoDepartamento
+                nombreDepartamento
+                descripcion
+                estado
+                fechaRegistro
                 usuarioRegistro
             }
         }
-	`,
+    `,
+    GET_DEPARTAMENTOS_COMBOBOX: `
+        query {
+            findDepartamentos {
+                idDepartamento
+                codigoDepartamento
+                nombreDepartamento
+            }
+        }
+    `,
+    GET_DEPARTAMENTO_BY_ID: `
+        query GetUbicacion($idDepartamento: Int!) {
+            findDepartamentoById(idDepartamento: $idDepartamento) {
+                idDepartamento
+                codigoDepartamento
+                nombreDepartamento
+                descripcion
+                estado
+                fechaRegistro
+                usuarioRegistro
+            }
+        }
+    `,
+
+
+    // UBICACIONES Y BODEGAS
     GET_UBICACIONES: `
         query {
             findAllUbicaciones {
@@ -75,8 +190,54 @@ export const queries = {
                 codigoUbicacion
                 nombreUbicacion
                 direccion
+                estado
                 fechaRegistro
                 usuarioRegistro
+            }
+        }
+    `,
+    GET_UBICACIONES_COMBOBOX: `
+        query {
+            findAllUbicaciones {
+                idUbicacion
+                codigoUbicacion
+                nombreUbicacion
+            }
+        }
+    `,
+    GET_UBICACION_BY_ID: `
+        query GetUbicacion($idUbicacion: Int!) {
+            findUbicacionById(idUbicacion: $idUbicacion) {
+                idUbicacion
+                nombreUbicacion
+                codigoUbicacion
+                direccion
+                estado
+                usuarioRegistro
+                fechaRegistro
+                bodegas {
+                    idBodega
+                    nombreBodega
+                    codigoBodega
+                    estado
+                    descripcion
+                    fechaRegistro
+                    usuarioRegistro
+                }
+            }
+        }
+    `,
+    GET_BODEGA_BY_ID: `
+        query GetUbicacion($idBodega: Int!) {
+            findBodegaById(idBodega: $idBodega) {
+                idBodega
+                idUbicacion
+                nombreBodega
+                codigoBodega
+                descripcion
+                estado
+                usuarioRegistro
+                fechaRegistro
             }
         }
     `,
@@ -96,6 +257,18 @@ export const queries = {
             }
         }
     `,
+    GET_BODEGAS_COMBOBOX: `
+        query GetBodegas($idUbicacion: Int!) {
+            findAllBodegasCombobox(idUbicacion: $idUbicacion) {
+                idBodega
+                codigoBodega
+                nombreBodega
+                descripcion
+            }
+        }
+    `,
+
+    // INVENTARIOS
     GET_INVENTARIO: `
         query {
             findInventarios {
@@ -107,21 +280,75 @@ export const queries = {
                 observaciones
                 usuarioRegistro
                 fechaRegistro
+                bodegas {
+                    codigoBodega
+                    nombreBodega
+                }
             }
         }
     `,
-    GET_CATEGORIAS: `
+     // INVENTARIOS
+    GET_INVENTARIO_COMBOBOX: `
         query {
-            findAllCategories {
-                idCategoria
-                codigoSubCategoria
-                nombreCategoria
-                descripcion
-                fechaRegistro
-                usuarioRegistro
+            findInventarios {
+                idInventario
+                codigoInventario
+                nombreInventario
             }
         }
     `,
+    GET_INVENTAIRO_BY_ID: `
+        query GetInventario($idInventario: Int!) {
+            findInventarioById(idInventario: $idInventario) {
+                idInventario
+                codigoInventario
+                nombreInventario
+                estado
+                pathRoute
+                observaciones
+                fechaRegistro
+                idBodega
+                idDepartamento
+                usuarioRegistro
+                estadoInventarios {
+                    idEstadoInventario
+                    idEstado
+                    idInventario
+                    observaciones
+                    usuarioRegistro
+                    fechaAsignacion
+                }
+                bodegas{
+                    idBodega
+                    codigoBodega
+                    nombreBodega
+                    descripcion
+                    estado
+                    ubicacion {
+                        idUbicacion
+                        nombreUbicacion
+                    }
+                }
+                inventarioProductos {
+                    idProductoInventario
+                    stockMin
+                    stockMax
+                    stock
+                    estado
+                    fechaRegistro
+                    usuarioRegistro
+                    producto {
+                        idProducto
+                        codigoProducto
+                        nombreProducto
+                        precio
+                    }
+                }
+            }
+        }
+    `,
+
+    // CATEGORIAS Y SUBCATEGORIAS
     GET_CATEGORIA_BY_ID: `
         query GetCategory($idCategoria: Int!) {
             finCategoryById(idCategoria: $idCategoria) {
@@ -134,6 +361,8 @@ export const queries = {
                 subCategorias {
                     idSubCategoria
                     nombre
+                    estado
+                    codigoProducto
                     codigoSubCategoria
                     fechaRegistro
                     usuarioRegistro
@@ -141,5 +370,58 @@ export const queries = {
                 }
             }
         }
-    `
+    `,
+    GET_CATEGORIAS: `
+        query {
+            findAllCategories {
+            idCategoria
+            nombreCategoria
+            descripcion
+            estado
+            fechaRegistro
+            usuarioRegistro
+            codigoSubCategoria
+            subCategorias {
+                idSubCategoria
+                nombre
+                codigoProducto
+                codigoSubCategoria
+            }
+        }
+	}`,
+    GET_SUBCATEGORIA_BY_ID: `
+        query GetSubCategory($idSubCategoria: Int!) {
+            finSubCategoryById(idSubCategoria: $idSubCategoria) {
+                idSubCategoria
+                codigoSubCategoria
+                codigoProducto
+                idCategoria
+                nombre
+                descripcion
+                estado
+                fechaRegistro
+                usuarioRegistro
+            }
+        }
+    `,
+    GET_CATEGORIA_COMBOBOX: `
+        query {
+            findAllCategories {
+                codigoSubCategoria
+                idCategoria
+                nombreCategoria
+                descripcion
+            }
+        }
+    `,
+    GET_SUBCATEGORIA_COMBOBOX: `
+        query GetSubCategoryByCategory($idCategoria: Int!) {
+            finSubCategoryByCategory(idCategoria: $idCategoria) {
+                codigoSubCategoria
+                idSubCategoria
+                nombre
+                descripcion
+            }
+        }
+    `,
 }

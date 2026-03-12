@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import RequestGraph from '../../../services/requestGraph';
 import { queries } from '../../../services/endPoints';
 import { formateDate } from '../../../helpers/helpers';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { type GridCellParams, GridActionsCellItem, GridActionsCell } from '@mui/x-data-grid-premium'
 import {
   DeleteOutlined, EditNoteOutlined,  AddRounded,
@@ -17,37 +17,51 @@ import {
   DataGridPremium, ToolbarButton
 } from '@mui/x-data-grid-premium';
 import CustomToolbar from '../../../reusable/ToolbarGrid';
-import SubCategoriaCreate from './SubCategoriaCreate';
+import BodegaCreate from './BodegaCreate';
 
 // TYPES
 type AnyRow = Record<string, unknown> & { id: string | number }
 
 type Details = {
-  idCategoria: number,
-  nombreCategoria: string,
-  descripcion?: string | null,
+  idUbicacion: number,
+  nombreUbicacion: string,
+  direccion?: string | null,
   fechaRegistro: string,
   usuarioRegistro: string,
-  codigoSubCategoria: string,
-  subCategorias: []
+  codigoUbicacion: string,
+  estado: number,
+  bodegas: []
 }
 
 const requestGraph = new RequestGraph
-async function getCategoryDetails(id: number) {
+async function getUbicacionDetails(id: number) {
   try {
     const result = await requestGraph.queryGraph(
-      queries.GET_CATEGORIA_BY_ID,
-      { idCategoria: id }
+      queries.GET_UBICACION_BY_ID,
+      { idUbicacion: id }
     )
 
-    return result.finCategoryById
+    return result.findUbicacionById
   } catch (error) {
     console.error("Error cargando productos:", error);
   }
 }
 
+function InfoItem({ label, value }: { label: string; value?: string | number | null }) {
+  const renderContent = () => {
+    if (value === 0 || value === 1) {
+      return (
+        <Chip
+          label={value === 1 ? 'Activo' : 'Inactivo'}
+          color={value === 1 ? 'success' : 'error'}
+          variant="outlined"
+        />
+      );
+    }
 
-function InfoItem({ label, value }: { label: string; value?: string | null }) {
+    // Manejo de valores nulos o vacíos, y el resto de valores
+    return value ?? '—';
+  };
 
   return (
     <Box sx={{ mb: 1 }}>
@@ -66,19 +80,20 @@ function InfoItem({ label, value }: { label: string; value?: string | null }) {
       <Typography
         variant="body2"
         color="text.secondary"
+        component="div"
       >
-        {value || '—'}
+        {renderContent()}
       </Typography>
     </Box>
   );
 }
 
-export default function DetailsCategory() {
+export default function DetailsUbicacion() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [idSubCategoria, setIdSubCategoria] = useState(null)
   const [isEdit, setEdit] = useState(false)
-  const [categoryDetails, setCategoryDetails] = useState<Details | null>(null);
+  const [ubicacionDetails, setUbicacionDetails] = useState<Details | null>(null);
   const [openCreate, setOpenCreate] = useState(false);
   const [loading, setLoading] = useState(false)
   const [rows, setRows] = useState<AnyRow[]>([])
@@ -106,7 +121,7 @@ export default function DetailsCategory() {
             label="Editar"
             showInMenu
             onClick={() => {
-              setIdSubCategoria(params.row.idSubCategoria)
+              setIdSubCategoria(params.row.idBodega)
               setEdit(true)
               setOpenCreate(true)
             }}
@@ -114,19 +129,19 @@ export default function DetailsCategory() {
         </GridActionsCell>
       ),
     }, {
-      field: 'nombre',
+      field: 'codigoBodega',
       headerAlign: 'center',
       align: 'center',
       resizable: true,
       flex: 1,
-      headerName: 'Nombre SubCategoria',
+      headerName: 'Código',
     }, {
-      field: 'codigoProducto',
+      field: 'nombreBodega',
       headerAlign: 'center',
       align: 'center',
       resizable: true,
       flex: 1,
-      headerName: 'Código de Productos',
+      headerName: 'Nombre Bodega',
     }, {
       field: 'descripcion',
       headerAlign: 'center',
@@ -171,19 +186,19 @@ export default function DetailsCategory() {
         )
       }
     },
-  ], [setIdSubCategoria, setEdit, setOpenCreate])
+  ], [])
 
   const load = useCallback(async(alive: boolean) => {
     try {
       setLoading(true)
-      const result = await getCategoryDetails(Number(id))
+      const result = await getUbicacionDetails(Number(id))
       setLoading(false)
 
-      setCategoryDetails(result)
+      setUbicacionDetails(result)
 
       if (!alive) return
 
-      const mappedRows: AnyRow[] = result.subCategorias.map((item: GridColDef, i: number) => {
+      const mappedRows: AnyRow[] = result.bodegas.map((item: GridColDef, i: number) => {
         item.align = 'center'
         item.headerAlign = 'center'
         item.resizable = true
@@ -259,46 +274,88 @@ export default function DetailsCategory() {
             </Box>
 
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, lg: 6, md: 6 }}>
-                <Box
-                  sx={{
-                    p: 2.5,
-                    borderRadius: 0.5,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    height: '100%',
-                  }}
-                >
-                  <InfoItem
-                    label="Categoría"
-                    value={categoryDetails?.nombreCategoria}
-                  />
-                  <InfoItem
-                    label="Descripción"
-                    value={categoryDetails?.descripcion}
-                  />
-                </Box>
+              <Grid size={{ xs: 12, lg: 6, md: 6 }} sx={{
+                borderRadius: 0.5,
+                border: '1px solid',
+                borderColor: 'divider',
+              }} container>
+                <Grid size={{ xs: 12, lg: 6, md: 12 }}>
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      height: '100%',
+                    }}
+                  >
+                    <InfoItem
+                      label="Nombre de Ubicación"
+                      value={ubicacionDetails?.nombreUbicacion}
+                    />
+                    <InfoItem
+                      label="Dirección"
+                      value={ubicacionDetails?.direccion}
+                    />
+                  </Box>
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 6, md: 12 }}>
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      height: '100%',
+                    }}
+                  >
+                    <InfoItem
+                      label="Código de Ubicación"
+                      value={ubicacionDetails?.codigoUbicacion}
+                    />
+                    <InfoItem
+                      label="Estado"
+                      value={ubicacionDetails?.estado}
+                    />
+                  </Box>
+                </Grid>
               </Grid>
 
-              <Grid size={{ xs: 12, lg: 6, md: 6 }}>
-                <Box
-                  sx={{
-                    p: 2.5,
-                    borderRadius: 0.5,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    height: '100%',
-                  }}
-                >
-                  <InfoItem
-                    label="Fecha de Registro"
-                    value={formateDate(categoryDetails?.fechaRegistro ?? '', true)}
-                  />
-                  <InfoItem
-                    label="Usuario Registro"
-                    value={categoryDetails?.usuarioRegistro}
-                  />
-                </Box>
+              <Grid size={{ xs: 12, lg: 6, md: 6 }} sx={{
+                borderRadius: 0.5,
+                border: '1px solid',
+                borderColor: 'divider',
+              }} container>
+                <Grid size={{ xs: 12, lg: 6, md: 6 }}>
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderRadius: 0.5,
+                    }}
+                  >
+                    <InfoItem
+                      label="Fecha de Registro"
+                      value={formateDate(ubicacionDetails?.fechaRegistro ?? '', true)}
+                    />
+                    <InfoItem
+                      label="Usuario Registro"
+                      value={ubicacionDetails?.usuarioRegistro}
+                    />
+                  </Box>
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 6, md: 6 }}>
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderRadius: 0.5,
+                    }}
+                  >
+                    <InfoItem
+                      label="Fecha Ult. Modificación"
+                      value={formateDate(ubicacionDetails?.fechaRegistro ?? '', true)}
+                    />
+                    <InfoItem
+                      label="Usuario Ult. Modificación"
+                      value={ubicacionDetails?.usuarioRegistro}
+                    />
+                  </Box>
+                </Grid>
               </Grid>
             </Grid>
           </Box>
@@ -328,7 +385,7 @@ export default function DetailsCategory() {
                   noRowsVariant: 'skeleton'
                 },
                 toolbar: {
-                  title: `SUBCATEGORIAS - ${categoryDetails?.codigoSubCategoria}`,
+                  title: `BODEGAS`,
                   addButton: (
                     <Tooltip title="Agregar una subcategoria">
                       <ToolbarButton onClick={() => {
@@ -351,11 +408,11 @@ export default function DetailsCategory() {
               }}
             />
           </Box>
-          <SubCategoriaCreate open={openCreate} onClose={() => {
+          <BodegaCreate open={openCreate} onClose={() => {
             setOpenCreate(false)
             setEdit(false)
             load(true)
-          }} idSubCategoria={Number(idSubCategoria)} idCategoria={Number(id)} isEdit={isEdit}/>
+          }} idBodega={Number(idSubCategoria)} idUbicacion={Number(id)} isEdit={isEdit}/>
         </Container>
       </Box>
     </Fade>

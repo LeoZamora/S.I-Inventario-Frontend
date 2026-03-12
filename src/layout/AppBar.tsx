@@ -1,6 +1,6 @@
 import {
   AppBar, Box, Toolbar,
-  IconButton, Typography, Divider
+  IconButton, Typography
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 
@@ -14,11 +14,12 @@ type Props = {
 
 export default function AppBarLayout({open, drawerWidth, onToggleDrawer, logo}: Props) {
   return (
-    <AppBar position='fixed' elevation={0}
+    <AppBar position='fixed' elevation={2}
       sx={{
-        backgroundColor: 'transparent',
-        // borderBottom: '1px solid #E0E0E0',
+        backgroundColor: (t) => t.palette.primary.main,
         ml: open ? `${drawerWidth}px` : 0,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
         width: open ? `calc(100% - ${drawerWidth}px)` : '100%',
         zIndex: (theme) => theme.zIndex.drawer + 1 ,
         transition: theme =>
@@ -28,22 +29,26 @@ export default function AppBarLayout({open, drawerWidth, onToggleDrawer, logo}: 
           }),
       }}>
       <Toolbar disableGutters variant="dense" sx={{
+            borderBottomRightRadius: 1,
+            borderBottomLeftRadius: 1,
             backgroundColor: 'transparent',
             display: 'flex',
             alignContent: 'center',
             color: 'grey',
           }}>
-            <Divider sx={{ my: 2, color: 'black', backgroundColor: 'black' }} orientation='vertical'/>
             <IconButton size='large' edge="end" color='inherit'
               onClick={onToggleDrawer}>
-              <MenuIcon />
+              <MenuIcon sx={{
+                color: 'white'
+              }} />
             </IconButton>
 
             <Box sx={{ flexGrow: 1 }}/>
 
             <Typography component={'h4'} fontWeight={600}
               sx={{
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                color: 'white'
               }}>
                 S.I GESTION DE INVENTARIO
             </Typography>
@@ -54,7 +59,7 @@ export default function AppBarLayout({open, drawerWidth, onToggleDrawer, logo}: 
               component={"img"}
               src={logo}
               sx={{
-                width: '100px',
+                width: '40px',
                 mr: 2
               }}
             />

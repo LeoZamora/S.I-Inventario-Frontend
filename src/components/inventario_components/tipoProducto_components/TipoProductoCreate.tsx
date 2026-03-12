@@ -2,82 +2,94 @@ import {
     Box, TextField, DialogContent,
     Dialog, DialogActions, DialogTitle,
     Button, Grid,
-    // useMediaQuery
+    Fade
 } from "@mui/material";
 
-import { useEffect, useState } from "react";
 import { shake } from "../../../assets/keyFframes";
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { validationSchema } from "../../../config/schema.validation";
-import { z } from 'zod'
-import type { Categoria } from "../../../helpers/interfaces";
-import RequestHttp from "../../../services/requestHttp";
+import { validationSchema } from '../../../config/schema.validation';
+import { z } from "zod";
 import RequestGraph from "../../../services/requestGraph";
+import RequestHttp from "../../../services/requestHttp";
+import { useEffect, useState } from "react";
+import type { TipoProducto } from "../../../helpers/interfaces";
 import { queries } from "../../../services/endPoints";
+import { IOSSwitch } from "../../../reusable/Switch";
+import { Typography, Tooltip } from '@mui/material';
+import { formateDate } from "../../../helpers/helpers";
 
 type Props = {
     open: boolean;
     onClose: () => void;
     isEdit: boolean;
-    idCategoria: number | null
+    idTipoProducto: number | null
 }
 
 const requestHttp = new RequestHttp
 const requestGraph = new RequestGraph
 
-type FormProps = z.infer<typeof validationSchema.categoriasSchema>
+type FormProps = z.infer<typeof validationSchema.tipoProductoSchema>
 
-const usuarioRegistro: string = 'dba'
-
-export default function CategoriaCreate({ open = false, onClose, isEdit, idCategoria }: Props) {
+export default function TipoProductoCreate({ open = false, isEdit, onClose, idTipoProducto }: Props) {
     const {
         control, handleSubmit,
         reset,
         formState: { errors }
     } = useForm({
-        resolver: zodResolver(validationSchema.categoriasSchema),
-        defaultValues: { nombre: '', codigo: ''}
+        resolver: zodResolver(validationSchema.tipoProductoSchema),
+        defaultValues: { nombre: '', descripcion: '', usuarioRegistro: '' },
     })
+    const [estadoTipoProducto, setEstado] = useState(false)
+    const [fechaRegistro, setFecha] = useState("")
     const [shakeDialog, setShakeDialog] = useState(false)
-    const title = isEdit ? 'Editar Categoría' : 'Nueva Categoría'
+    const title = isEdit ? 'Editar Tipo Producto' : 'Nuevo Tipo Producto'
 
     async function onSubmit(data: FormProps) {
         try {
-            const dataForm: Categoria = {
-                nombreCategoria: data.nombre,
-                codigoSubCategoria: data.codigo,
-                descripcion: data.descripcion ?? null,
-                usuarioRegistro: usuarioRegistro
+            const dataForm: TipoProducto = {
+                nombre: data.nombre,
+                descripcion: data?.descripcion,
+                usuarioRegistro: data.usuarioRegistro
             }
 
-            const result = await requestHttp.postCategoria(dataForm)
+            const result = await requestHttp.postTipoProducto(dataForm)
             if (result?.code === 200) {
+                console.log(result);
                 onClose()
+            } else {
+                console.log(result);
             }
         } catch (error) {
             console.log(error)
         }
     }
 
-
     useEffect(() => {
-        async function getCategoriaById(id: number | null) {
+        async function getTipoProdById(id: number | null) {
             if (!id) return
 
             try {
                 const result = await requestGraph.queryGraph(
-                    queries.GET_CATEGORIA_BY_ID,
-                    { idCategoria: id }
+                    queries.GET_TIPOPROD_BY_ID,
+                    { idTipoProducto: id }
                 )
 
-                const categoria = result?.finCategoryById
+                const tipoProducto = result?.findTipoProductoById
 
-                if (categoria) {
+                if (tipoProducto) {
+                    if (tipoProducto.estado === 1) {
+                        setEstado(true)
+                    } else {
+                        setEstado(false)
+                    }
+
+                    setFecha(tipoProducto.fechaRegistro)
+
                     reset({
-                        nombre: categoria.nombreCategoria,
-                        codigo: categoria.codigoSubCategoria,
-                        descripcion: categoria.descripcion
+                        nombre: tipoProducto.nombre,
+                        usuarioRegistro: tipoProducto.usuarioRegistro,
+                        descripcion: tipoProducto.descripcion
                     })
                 }
 
@@ -87,25 +99,24 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
         }
 
         if (isEdit) {
-            getCategoriaById(idCategoria)
+            getTipoProdById(idTipoProducto)
         } else {
             reset({
                 nombre: '',
-                codigo: '',
-                descripcion: ''
+                descripcion: '',
+                usuarioRegistro: ''
             })
         }
+    }, [idTipoProducto, isEdit, reset])
 
-    }, [isEdit, idCategoria, reset])
 
     return (
-        // fullScreen={fullScreen}
         <Dialog open={open} onClose={(event, reason) => {
-            if (reason === "backdropClick" || reason === 'escapeKeyDown') {
-                setShakeDialog(true);
+            if (reason === 'backdropClick' || reason === "escapeKeyDown") {
+                setShakeDialog(true)
 
                 setTimeout(() => {
-                    setShakeDialog(false);
+                    setShakeDialog(false)
                 }, 400);
 
                 return;
@@ -115,8 +126,8 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
 
             reset({
                 nombre: '',
-                codigo: '',
-                descripcion: ''
+                descripcion: '',
+                usuarioRegistro: ''
             })
         }}
             disableRestoreFocus
@@ -125,28 +136,59 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
             sx={{
                 "& .MuiDialog-paper": {
                     borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
                     width: '400px',
                     animation: shakeDialog ? `${shake} 0.4s ease` : "none",
                 },
             }}
         >
+
             <DialogTitle sx={{
-                    "&.MuiDialogTitle-root": {
-                        paddingBottom: 0
-                    },
-                    "&.MuiDialogContent-root": {
-                        paddingTop: 2
-                    }
-                }}
+                "&.MuiDialogTitle-root": {
+                    paddingBottom: 0
+                },
+                "&.MuiDialogContent-root": {
+                    pt: 2
+                },
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignContent: 'center',
+                alignItems: 'center'
+            }}
             >
-                {title}
+                <Box>
+                    {title}
+                </Box>
+                <Box>
+                    <Tooltip title="Estado" placement="top"
+                        slots={{
+                            transition: Fade
+                        }}
+                        slotProps={{
+                            tooltip: {
+                                sx: {
+                                    ml: 1,
+                                    borderRadius: .5,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    backgroundColor: 'white',
+                                    color: 'grey'
+                                }
+                            },
+                        }}
+                    >
+                        <IOSSwitch sx={{ m: 1 }} checked={estadoTipoProducto} />
+                    </Tooltip>
+                </Box>
             </DialogTitle>
 
-            <DialogContent sx={{
+            <DialogContent
+                sx={{
                     pt: 2,
                     "&.MuiDialogContent-root": {
-                        paddingTop: 2
-                    },
+                        pt: 2
+                    }
                 }}
             >
                 <Box component="form"
@@ -157,7 +199,7 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
                         flexDirection: 'column',
                         maxHeight: '100%',
                         width: '100%',
-                        gap: 2,
+                        gap: 2
                     }}
                 >
                     <Grid container spacing={2}>
@@ -171,15 +213,14 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
                                         id="nombre"
                                         type="text"
                                         size="small"
-                                        label="Nombre de la Categoría"
-                                        placeholder="Ingrese el nombre de la categoría"
+                                        label="Nombre del tipo de producto"
+                                        placeholder="Ingrese el nombre"
                                         error={!!errors.nombre}
                                         // required
                                         helperText={errors.nombre?.message}
                                         fullWidth
                                         variant="outlined"
                                         slotProps={{
-                                            // Matener un placeholder activo
                                             inputLabel: {
                                                 shrink: true
                                             }
@@ -191,43 +232,8 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
                                         }}
                                     />
                                 )}
-
-                            />
-                        </Grid>
-
-                        <Grid size={{ xs: 12, md: 12, lg: 12 }}>
-                            <Controller
-                                name="codigo"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        id="codigo"
-                                        label="Código para SubCategorías"
-                                        type="text"
-                                        size="small"
-                                        placeholder="Ingrese el código para las subcategorías"
-                                        error={!!errors.codigo}
-                                        // required
-                                        helperText={errors.codigo?.message}
-                                        fullWidth
-                                        variant="outlined"
-                                        slotProps={{
-                                            inputLabel: {
-                                                shrink: true,
-                                            },
-                                            input: {
-                                                readOnly: isEdit ? true : false
-                                            }
-                                        }}
-                                        sx={{
-                                            "& .MuiOutlinedInput-root": {
-                                                borderRadius: 0.5
-                                            }
-                                        }}
-                                    />
-                                )}
-                            />
+                            >
+                            </Controller>
                         </Grid>
 
                         <Grid size={{ xs: 12, md: 12, lg: 12 }}>
@@ -240,15 +246,13 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
                                         id="descripcion"
                                         type="text"
                                         size="small"
-                                        multiline
-                                        maxRows={4}
-                                        // error={!!errors.descripcion}
-                                        // required
+                                        label="Descripcion"
+                                        placeholder="Ingrese una breve descripcion"
                                         helperText={errors.descripcion?.message}
-                                        label="Descripción de la Categoría"
-                                        placeholder="Ingrese la descripción de la categoría"
                                         fullWidth
                                         variant="outlined"
+                                        multiline
+                                        rows={4}
                                         slotProps={{
                                             inputLabel: {
                                                 shrink: true
@@ -261,19 +265,36 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
                                         }}
                                     />
                                 )}
-                            />
+                            >
+                            </Controller>
                         </Grid>
                     </Grid>
-
                 </Box>
+
+                { isEdit && (
+                        <Box>
+                            <Typography variant="body1" component="small" fontSize={12}
+                                color="text.secondary"
+                                sx={{
+                                    pt: 1
+                                }}
+                            >
+                                Fecha Registro: { formateDate(fechaRegistro, true) }
+                            </Typography>
+                        </Box>
+                    )
+                }
             </DialogContent>
+
+
             <DialogActions>
                 <Button onClick={() => {
                     onClose()
+                    setEstado(false)
                     reset({
                         nombre: '',
-                        codigo: '',
-                        descripcion: ''
+                        descripcion: '',
+                        usuarioRegistro: ''
                     })
                 }} color="secondary"
                     sx={{
@@ -295,6 +316,7 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
                     Guardar
                 </Button>
             </DialogActions>
+
         </Dialog>
-    )
+    );
 }

@@ -123,7 +123,8 @@ export default function AppDrawer({ open, drawerWidth, onClose }: Props) {
                         width: drawerWidth,
                         color: "inherit",
                         backgroundColor: 'transparent',
-                        border: 0,
+                        border: '1px solid',
+                        borderColor: 'divider',
                         boxSizing: 'border-box',
                         display: open ? 'flex' : 'none',
                         transition: (t) => t.transitions.create('width', {

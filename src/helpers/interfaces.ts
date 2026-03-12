@@ -1,15 +1,41 @@
 export interface Categoria {
+    // idCategoria?: number | null
     nombreCategoria: string;
     codigoSubCategoria: string | null;
-    descripcion: string | null;
+    descripcion?: string | null;
     usuarioRegistro: string
 }
-
 export interface SubCategoria {
-    idSubCategoria: number;
+    idSubCategoria?: number | null;
+    codigoSubCategoria?: string;
+    codigoProducto: string;
     nombre: string;
-    categoria: Categoria;
+    idCategoria: number;
+    descripcion?: string | null;
+    usuarioRegistro?: string | null;
+    categoria?: Categoria | null;
 }
+
+export interface Bodegas {
+    idBodega?: number | null
+    codigoBodega: string | null;
+    nombreBodega: string;
+    descripcion?: string | null;
+    usuarioRegistro: string
+    idUbicacion?: number | null
+}
+
+
+export interface Ubicacion {
+    idUbicacion?: number | null;
+    codigoUbicacion: string;
+    nombreUbicacion: string;
+    direccion?: string | null;
+    fechaRegistro?: string | null;
+    usuarioRegistro?: string | null;
+    bodegas?: Bodegas | null;
+}
+
 
 export interface InventarioProducto {
     stockMin: number;
@@ -20,6 +46,8 @@ export interface InventarioProducto {
 
 export interface TipoProducto {
     nombre: string;
+    descripcion?: string | null;
+    usuarioRegistro: string
 }
 
 export interface ProductoGQL {
@@ -37,6 +65,26 @@ export interface ProductoGQL {
     usuarioRegistro: string;
 }
 
+export interface Producto {
+    idInventario?: number;
+    idTipoProducto?: number;
+    idCategoria?: number | null
+    idSubCategoria?: number | null;
+    codigoProducto: string;
+    nombreProducto: string;
+    marca: string;
+    modelo?: string | null;
+    observaciones?: string | null
+    imagen?: string | null,
+    caracteristicasEspeciales?: string | null
+    precio: number;
+    stock: number
+    stockMin: number
+    stockMax: number
+    usuarioRegistro: string;
+    detallesEspecificos?: object | null
+}
+
 export interface UbicacionQL {
     nombreUbicacion: string;
 }
@@ -52,12 +100,14 @@ export interface BodegaGraphQL {
 }
 
 export interface InventarioQL {
-    idInventario: number;
+    idInventario?: number;
     codigoInventario: string;
     nombreInventario: string;
     pathRoute: string;
-    observaciones: string;
-    estado: string | number;
-    fechaRegistro: Date;
+    observaciones?: string | null;
+    estado?: string | number;
+    fechaRegistro?: Date;
     usuarioRegistro: string;
+    idBodega?: number | null;
+    idDepartamento?: number | null
 }

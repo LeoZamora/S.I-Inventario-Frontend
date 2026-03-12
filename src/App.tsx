@@ -1,8 +1,14 @@
+import { Box } from '@mui/material';
 import RouterApp from './router/RouterApp';
+
 
 function App() {
   return (
-    <RouterApp />
+    <Box component="div">
+      {/* <AliveScope> */}
+        <RouterApp />
+      {/* </AliveScope> */}
+    </Box>
   )
 }
 

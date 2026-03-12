@@ -1,5 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { InventarioQL } from '../../helpers/interfaces';
+
+type Inventario = {
+    name: string
+    route: string
+    descripcion?: string | null,
+    icon: string
+}
 
 export const authSlice = createSlice({
     name: 'auth',
@@ -19,7 +25,8 @@ export const authSlice = createSlice({
 export const inventariosSlice = createSlice({
     name: 'inventarios',
     initialState: {
-        inventarios: [] as InventarioQL[],
+        inventarios: [] as Inventario[],
+        idInventario: 0
     },
     reducers: {
         setInventarios: (state, action) => {
@@ -27,6 +34,9 @@ export const inventariosSlice = createSlice({
         },
         clearInventarios: (state) => {
             state.inventarios = [];
-        }
+        },
+        setInvetarioSelected: (state, action) => {
+            state.idInventario  = action.payload
+        },
     }
 })

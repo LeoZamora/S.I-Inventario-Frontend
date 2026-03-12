@@ -1,37 +1,86 @@
-import { Box, Typography, Button, Container } from "@mui/material";
+import { Typography, Button, Box, Stack, Paper } from "@mui/material";
+import logo from "../assets/logo.png";
 
-export default function HomePage() {
+interface HomePageProps {
+    userName?: string;
+    systemName?: string;
+    onStart?: () => void;
+}
+
+export default function HomePage({
+    userName = "Juan Pérez",
+    systemName = "S.I GESTION DE INVENTARIO",
+    onStart,
+}: HomePageProps) {
     return (
-        <Container maxWidth="md" sx={{ backgroundColor: 'white', }}>
-            <Box
+        <Box
+            sx={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                p: 2,
+            }}
+        >
+            <Paper
+                elevation={0}
                 sx={{
-                    height: '100vh',
-                    width: '100%',
-                    backgroundColor: 'white',
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    textAlign: "center",
-                    gap: 2,
+                    p: 5,
+                    borderRadius: 3,
+                    maxWidth: 600,
+                    width: "100%",
                 }}
             >
-                <Typography variant="h2" fontWeight="bold">
-                    Bienvenido 👋
-                </Typography>
+                <Stack spacing={4} alignItems="center">
+                    {/* Header */}
+                    <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={3}
+                        alignItems="center"
+                        textAlign={{ xs: "center", sm: "left" }}
+                    >
+                        {/* Logo */}
+                        <Box
+                            component="img"
+                            src={logo}
+                            alt="Logo del sistema"
+                            sx={{
+                                width: 90,
+                                height: 90,
+                                objectFit: "contain",
+                            }}
+                        />
 
-                <Typography variant="h6" color="text.secondary">
-                    Esta es la página principal de la aplicación
-                </Typography>
+                        {/* Textos */}
+                        <Box>
+                            <Typography variant="h4" fontWeight={700} color="primary">
+                                Bienvenido,  {userName}
+                            </Typography>
 
-                <Button
-                    variant="contained"
-                    size="large"
-                    sx={{ mt: 2, px: 4 }}
-                >
-                    Comenzar
-                </Button>
-            </Box>
-        </Container>
+                            <Typography variant="h6" color="text.secondary" textAlign="center">
+                                {systemName}
+                            </Typography>
+                        </Box>
+                    </Stack>
+
+                    {/* Botón */}
+                    <Button
+                        variant="contained"
+                        size="large"
+                        onClick={onStart}
+                        sx={{
+                            px: 6,
+                            py: 1.5,
+                            borderRadius: 2,
+                            textTransform: "none",
+                            fontSize: "1rem",
+                        }}
+                    >
+                        Comenzar
+                    </Button>
+                </Stack>
+            </Paper>
+        </Box>
     );
 }

@@ -23,7 +23,7 @@ import { type GridCellParams } from '@mui/x-data-grid-premium'
 import { endPoints, queries } from '../../services/endPoints';
 import { ChartsRenderer, configurationOptions } from '@mui/x-charts-premium'
 import RequestGraph from '../../services/requestGraph';
-import CustomToolbar from '../ToolbarGrid';
+import CustomToolbar from '../../reusable/ToolbarGrid';
 import type { ProductoGQL } from '../../helpers/interfaces';
 
 const requstHttp = new RequestHttp
@@ -72,20 +72,6 @@ const headersColumns: GridColDef[] = [{
         resizable: false,
         headerName: 'Código Prod',
     },
-    // {
-    //     field: 'inventario',
-    //     headerAlign: 'center',
-    //     align: 'center',
-    //     resizable: false,
-    //     headerName: 'Inventario',
-    // },
-    // {
-    //     field: 'subCategoria',
-    //     headerAlign: 'center',
-    //     align: 'center',
-    //     resizable: false,
-    //     headerName: 'SubCategoria',
-    // },
     {
         field: 'categoria',
         headerAlign: 'center',
@@ -186,7 +172,7 @@ async function getProductos() {
         return result.findProductos.map((prod: ProductoGQL) => {
             return {
                 ...prod,
-                categoria: prod.subCategoria.categoria.nombreCategoria,
+                categoria: prod.subCategoria.categoria?.nombreCategoria,
                 subCategoria: prod.subCategoria.nombre,
                 tipoProducto: prod.tipoProducto.nombre,
                 stock: prod.inventarioProductos[0].stock || 0,
@@ -249,13 +235,11 @@ export default function InventarioArmas() {
     useEffect(() => {
         if (!rows.length) return;
 
-apiRef.current?.autosizeColumns({
-                includeHeaders: true,
-                includeOutliers: true,
-                expand: true
-            })
-
-        
+        apiRef.current?.autosizeColumns({
+            includeHeaders: true,
+            includeOutliers: true,
+            expand: true
+        })
     }, [rows, apiRef])
 
     return (
