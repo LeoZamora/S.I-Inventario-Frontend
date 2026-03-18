@@ -1,10 +1,17 @@
 import { z } from 'zod'
 
 // CATEGORY VALIDATION
+const itemComboboxSchema = z.object({
+    nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+    descripcion: z.string().optional().nullable(),
+    usuarioRegistro: z.string("El usuario de registro es obligatorio").min(3, "El usuario debe tener almenos 3 caracteres")
+})
+
+// CATEGORY VALIDATION
 const categoriasSchema = z.object({
     nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
     codigo: z.string().min(1, "El codigo es obligatorio"),
-    descripcion: z.string().optional().nullable()
+    descripcion: z.string().optional().nullable(),
 })
 
 // SUBCATEGORY VALIDATION
@@ -53,11 +60,11 @@ const inventarioSchema = z.object({
 })
 
 const equipoComputoSchema = z.object({
-    ramGB: z.number(),
-    cantidadAlm: z.number(),
+    ramGB: z.number().min(1, "La cantidad debe ser mayor de 2Gb como minimo").default(1),
+    cantidadAlm: z.number().min(1, "El campo es obligatorio").default(2),
     procesador: z.string().optional().nullable(),
-    idTipoDispositivo: z.number(),
-    idTipoAlmacenamiento: z.number(),
+    idTipoDispositivo: z.number().min(1,"El tipo de dispositivo es obligatorio"),
+    idTipoAlmacenamiento: z.number().min(1,"El tipo de almacenamiento es obligatorio"),
 })
 
 const armaSchema = z.object({
@@ -95,6 +102,7 @@ const detalleSchema = z.discriminatedUnion("codigoSubCategoria", [
 ])
 
 const productoSchema = z.object({
+    idProducto: z.number().optional().nullable(),
     idSubCategoria: z.number().min(1, "La subcategoria es obligatoria"),
     idCategoria: z.number().min(1, "La categoria es obligatoria"),
     idTipoProducto: z.number().min(1, "El tipo de producto es obligatorio"),
@@ -113,9 +121,10 @@ const productoSchema = z.object({
     stockMax: z.number().min(1, "El stock maximo no puede ser 0"),
     stock: z.number().nonnegative("El stock no puede ser negativo"),
     precio: z.number().min(1, "El precio es obligatorio"),
-    precioDolares: z.number().min(1, "El precio es obligatorio"),
-    total: z.number().min(1, "Precio total autocalculado"),
+    precioDolares: z.number().optional(),
+    total: z.number().optional(),
 
+    fechaRegistro: z.string().optional().nullable(),
     usuarioRegistro: z.string("El usuario de registro es obligatorio").min(3, "El usuario debe tener almenos 3 caracteres"),
     detallesEspecificos: detalleSchema
 })
@@ -127,5 +136,7 @@ export const validationSchema = {
     ubicacionSchema,
     bodegasSchema,
     inventarioSchema,
-    productoSchema
+    productoSchema,
+    itemComboboxSchema,
+    detalleSchema
 }

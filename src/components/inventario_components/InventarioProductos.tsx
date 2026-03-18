@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import RequestHttp from '../../services/requestHttp';
-import  { formateDate, formatCurrency } from '../../helpers/helpers';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import  { formateDate, formatCurrency } from '../../helpers/helpers.tsx';
 import
     {type  GridColDef }
 from '@mui/x-data-grid'
 import {
     Box, Chip, Tooltip, Fade,
-    Autocomplete,
-    TextField,
+    Autocomplete, TextField,
     Grid
 } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -22,7 +20,7 @@ import {
     GridSidebarValue, GridActionsCellItem, GridActionsCell
 } from '@mui/x-data-grid-premium'
 import { type GridCellParams } from '@mui/x-data-grid-premium'
-import { endPoints, queries } from '../../services/endPoints';
+import { queries } from '../../services/endPoints';
 import { ChartsRenderer, configurationOptions } from '@mui/x-charts-premium'
 import RequestGraph from '../../services/requestGraph';
 import CustomToolbar from '../../reusable/ToolbarGrid';
@@ -31,8 +29,6 @@ import { useInventarioContext } from '../../context/Inventario.context';
 import { useAppDispatch, useAppSelector } from '../../appStore/hooks/hook';
 import { useNavigate } from 'react-router-dom';
 import { inventariosSlice } from '../../appStore/slices/slices';
-
-const requstHttp = new RequestHttp
 
 type AnyRow = Record<string, unknown> & { id: string | number }
 
@@ -51,164 +47,6 @@ type ListOption = {
 
 
 const paginationModel = { page: 0, pageSize: 5 };
-const headersColumns: GridColDef[] = [{
-        field: 'opc',
-        // headerAlign: 'center',
-        align: 'center',
-        sortable: false,
-        disableExport: true,
-        resizable: false,
-        headerName: '',
-        headerClassName: 'classname--header',
-        cellClassName: 'classname--cell',
-        renderCell: (params) => {
-            const stockMin = Number(params.row.stockMin)
-            const stock = Number(params.row.stock)
-
-            const borderColor = stock > stockMin ? '4px solid green' :
-                stock === stockMin ? '4px solid orange' : '4px solid red';
-
-            return (
-                <Box sx={{ borderLeft: borderColor }}>
-                    <GridActionsCell {...params}>
-                        <GridActionsCellItem
-                            icon={<DeleteOutlined />}
-                            label="Eliminar"
-                            showInMenu
-                        />
-                        <GridActionsCellItem
-                            icon={<EditNoteOutlined />}
-                            label="Editar"
-                            showInMenu
-                        />
-                    </GridActionsCell>
-                </Box>
-            )
-        }
-    }, {
-        field: 'codigoProducto',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 150,
-        align: 'center',
-        resizable: false,
-        headerName: 'Código Prod',
-    },
-    {
-        field: 'subCategoria',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 150,
-        align: 'center',
-        resizable: false,
-        headerName: 'SubCategoria',
-    }, {
-        field: 'categoria',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 150,
-        align: 'center',
-        resizable: false,
-        headerName: 'Categoria',
-    }, {
-        field: 'tipoProducto',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 150,
-        align: 'center',
-        resizable: false,
-        headerName: 'Tipo Producto',
-    }, {
-        field: 'nombreProducto',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 150,
-        align: 'center',
-        resizable: false,
-        headerName: 'Producto',
-    }, {
-        field: 'precio',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 150,
-        align: 'center',
-        resizable: false,
-        headerName: 'Precio',
-        type: 'number',
-        chartable: true,
-        renderCell: (params: GridCellParams) => {
-            return (
-                <span>
-                    { formatCurrency(Number(params.value), 'NIO') }
-                </span>
-            )
-        }
-    }, {
-        field: 'stock',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 100,
-        align: 'center',
-        resizable: false,
-        editable: true,
-        headerName: 'Stock Actual',
-    }, {
-        field: 'stockMin',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 100,
-        align: 'center',
-        resizable: false,
-        headerName: 'Stock Min',
-    }, {
-        field: 'stockMax',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 100,
-        align: 'center',
-        resizable: false,
-        headerName: 'Stock Max',
-    }, {
-        field: 'fechaRegistro',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 150,
-        align: 'center',
-        resizable: false,
-        headerName: 'Fecha Registro',
-        renderCell: (params: GridCellParams) => {
-            return (
-                <span>
-                    { formateDate(String(params.value), true) }
-                </span>
-            )
-        }
-    }, {
-        field: 'usuarioRegistro',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 150,
-        align: 'center',
-        resizable: false,
-        headerName: 'Usuario Registro',
-    }, {
-        field: 'estado',
-        headerAlign: 'center',
-        flex: 1,
-        minWidth: 150,
-        align: 'center',
-        resizable: false,
-        headerName: 'Estado',
-        renderCell: (params: GridCellParams) => {
-            return (
-                <Chip label={params.value ? 'Activo' : 'Inactivo'}
-                    color={params.value ? 'success' : 'error'}
-                    variant="outlined"
-                />
-            )
-        }
-    },
-]
 
 const requestGraph = new RequestGraph()
 
@@ -220,10 +58,173 @@ export default function InventarioProductos() {
 
     const isRootPath = location.pathname === '/inventario/productos'
 
+    const headersColumns: GridColDef[] = useMemo(() => [{
+            field: 'opc',
+            // headerAlign: 'center',
+            align: 'center',
+            sortable: false,
+            disableExport: true,
+            resizable: false,
+            headerName: '',
+            headerClassName: 'classname--header',
+            cellClassName: 'classname--cell',
+            renderCell: (params) => {
+                const stockMin = Number(params.row.stockMin)
+                const stock = Number(params.row.stock)
+
+                const borderColor = stock > stockMin ? '4px solid green' :
+                    stock === stockMin ? '4px solid orange' : '4px solid red';
+
+                return (
+                    <Box sx={{ borderLeft: borderColor }}>
+                        <GridActionsCell {...params}>
+                            <GridActionsCellItem
+                                icon={<DeleteOutlined />}
+                                label="Eliminar"
+                                showInMenu
+                            />
+                            <GridActionsCellItem
+                                icon={<EditNoteOutlined />}
+                                label="Editar"
+                                showInMenu
+                                onClick={() => {
+                                    navigate(`${params.row.idProducto}`)
+                                }}
+                            />
+                        </GridActionsCell>
+                    </Box>
+                )
+            }
+        }, {
+            field: 'codigoProducto',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 150,
+            align: 'center',
+            resizable: false,
+            headerName: 'Código Prod',
+        },
+        {
+            field: 'subCategoria',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 150,
+            align: 'center',
+            resizable: false,
+            headerName: 'SubCategoria',
+        }, {
+            field: 'categoria',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 150,
+            align: 'center',
+            resizable: false,
+            headerName: 'Categoria',
+        }, {
+            field: 'tipoProducto',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 150,
+            align: 'center',
+            resizable: false,
+            headerName: 'Tipo Producto',
+        }, {
+            field: 'nombreProducto',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 150,
+            align: 'center',
+            resizable: false,
+            headerName: 'Producto',
+        }, {
+            field: 'precio',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 150,
+            align: 'center',
+            resizable: false,
+            headerName: 'Precio',
+            type: 'number',
+            chartable: true,
+            renderCell: (params: GridCellParams) => {
+                return (
+                    <span>
+                        { formatCurrency(Number(params.value), 'NIO') }
+                    </span>
+                )
+            }
+        }, {
+            field: 'stock',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 100,
+            align: 'center',
+            resizable: false,
+            editable: true,
+            headerName: 'Stock Actual',
+        }, {
+            field: 'stockMin',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 100,
+            align: 'center',
+            resizable: false,
+            headerName: 'Stock Min',
+        }, {
+            field: 'stockMax',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 100,
+            align: 'center',
+            resizable: false,
+            headerName: 'Stock Max',
+        }, {
+            field: 'fechaRegistro',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 150,
+            align: 'center',
+            resizable: false,
+            headerName: 'Fecha Registro',
+            renderCell: (params: GridCellParams) => {
+                return (
+                    <span>
+                        { formateDate(String(params.value), true) }
+                    </span>
+                )
+            }
+        }, {
+            field: 'usuarioRegistro',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 150,
+            align: 'center',
+            resizable: false,
+            headerName: 'Usuario Registro',
+        }, {
+            field: 'estado',
+            headerAlign: 'center',
+            flex: 1,
+            minWidth: 150,
+            align: 'center',
+            resizable: false,
+            headerName: 'Estado',
+            renderCell: (params: GridCellParams) => {
+                return (
+                    <Chip label={params.value ? 'Activo' : 'Inactivo'}
+                        color={params.value ? 'success' : 'error'}
+                        variant="outlined"
+                    />
+                )
+            }
+        },
+    ], [navigate])
+
     const [rows, setRows] = useState<AnyRow[]>([]);
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [inventarios, setInventarios] = useState<ListOption[]>([])
     const [loading, setLoading] = useState(false);
+    const [precioInventario, setPrecio] = useState<number>(0)
     const {setSelected} = useInventarioContext()
 
     const idInventarioSelected = useAppSelector(state => state.inventario.idInventario)
@@ -232,6 +233,7 @@ export default function InventarioProductos() {
 
     const getProductos = useCallback(async (id: number) => {
         dispatch(setInvetarioSelected(id))
+        let countPrecio: number = 0
         try {
             setLoading(true)
             const result = await requestGraph.queryGraph(
@@ -241,6 +243,7 @@ export default function InventarioProductos() {
             setLoading(false)
 
             const data = result.findProductos.map((prod: ProductoGQL) => {
+                countPrecio += Number(prod.precio)
                 return {
                     ...prod,
                     categoria: prod.subCategoria?.categoria?.nombreCategoria,
@@ -251,6 +254,8 @@ export default function InventarioProductos() {
                     stockMax: prod.inventarioProductos[0].stockMax || 0,
                 }
             })
+
+            setPrecio(countPrecio)
 
             const mappedRows: AnyRow[] = data.map((item: GridColDef, i: number) => {
                 item.align = 'center'
@@ -268,7 +273,7 @@ export default function InventarioProductos() {
         } catch (error) {
             console.error("Hubo un fallo", error);
         }
-    }, [dispatch, setInvetarioSelected])
+    }, [dispatch, setInvetarioSelected, headersColumns])
 
     const load = useCallback(async (alive: boolean) => {
         if (idInventarioSelected) {
@@ -277,24 +282,21 @@ export default function InventarioProductos() {
 
         try {
             setLoading(true)
-            const result = await requstHttp.getData(endPoints.getProductos)
             const result2 = await requestGraph.queryGraph(
                 queries.GET_INVENTARIO_COMBOBOX,
             )
             setLoading(false)
 
-            if (result.data?.code === 200) {
-                if (!alive) return
+            if (!alive) return
 
-                if (result2.findInventarios) {
-                    const foundInventarios = result2.findInventarios
-                    setInventarios(foundInventarios.map((item: InventarioCombobox) => {
-                        return {
-                            label: `${item.codigoInventario} - ${item.nombreInventario}`,
-                            id: Number(item.idInventario),
-                        }
-                    }))
-                }
+            if (result2.findInventarios) {
+                const foundInventarios = result2.findInventarios
+                setInventarios(foundInventarios.map((item: InventarioCombobox) => {
+                    return {
+                        label: `${item.codigoInventario} - ${item.nombreInventario}`,
+                        id: Number(item.idInventario),
+                    }
+                }))
             }
         } catch (error) {
             console.error("Error cargando productos:", error);
@@ -346,7 +348,32 @@ export default function InventarioProductos() {
                                             alignItems: 'center'
                                         }}
                                     >
-                                        <h1>Sistema de Inventario dinamico</h1>
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 1
+                                            }}
+                                        >
+                                            <Chip label={`V. Inventario:
+                                                ${formatCurrency(Number(precioInventario), 'NIO')}`
+                                            }
+                                                variant='outlined'
+                                                color='success'
+                                                sx={{
+                                                    fontWeight: "bold",
+                                                    borderRadius: .5
+                                                }}
+                                            />
+                                            <Chip label={`T. Producto: ${rows.length}`}
+                                                variant='outlined'
+                                                color='primary'
+                                                sx={{
+                                                    fontWeight: "bold",
+                                                    borderRadius: .5
+                                                }}
+                                            />
+                                        </Box>
                                     </Grid>
 
                                     <Grid size={{ xs: 12, lg: 4, sm: 3 }}>
@@ -383,74 +410,77 @@ export default function InventarioProductos() {
                                 </Grid>
                             </Box>
                         </Box>
-                        <DataGridPremium
-                            apiRef={apiRef}
-                            rows={rows}
-                            columns={columns}
-                            density="compact"
-                            // rowSpacingType="border"
-                            loading={loading}
-                            autosizeOnMount
-                            initialState={{
-                                pagination: { paginationModel },
-                                sidebar: {
-                                    open: false,
-                                    value: GridSidebarValue.Charts
-                                },
-                            }}
-                            pageSizeOptions={[5, 10]}
-                            chartsIntegration
-                            showToolbar
-                            slots={{
-                                toolbar: CustomToolbar,
-                                chartsPanel: GridChartsPanel,
-                            }}
-                            experimentalFeatures={{
-                                charts: true,
-                            }}
-                            slotProps={{
-                                chartsPanel: {
-                                    schema: configurationOptions
-                                },
-                                loadingOverlay: {
-                                    variant: 'skeleton',
-                                    noRowsVariant: 'skeleton',
-                                },
-                                toolbar: {
-                                    title: 'INVENTARIO DE PRODUCTOS',
-                                    addButton: (
-                                        <Tooltip title="Nueva Producto">
-                                            <ToolbarButton onClick={() => {
-                                                navigate('new')
-                                            }}>
-                                                <AddRounded />
-                                            </ToolbarButton>
-                                        </Tooltip>
-                                    )
-                                }
-                            }}
-                            sx={{
-                                borderRadius: 0,
-                                borderLeft: 0,
-                                borderRight: 0,
-                                borderTop: 0,
-                                flexGrow: 1,
-                                width: '100%',
-                                "& .MuiDataGrid-main": {
-                                    width: '100%'
-                                },
-                                "&::-webkit-scrollbar": {
-                                    width: "5px",
-                                    display: 'none'
-                                },
-                                '& .classname--header': {
-                                    p: 0,
-                                },
-                                '& .classname--cell': {
-                                    p: 0,
-                                }
-                            }}
-                        />
+                        <Fade in>
+                            <DataGridPremium
+                                apiRef={apiRef}
+                                rows={rows}
+                                columns={columns}
+                                density="compact"
+                                // rowSpacingType="border"
+                                loading={loading}
+                                autosizeOnMount
+                                initialState={{
+                                    pagination: { paginationModel },
+                                    sidebar: {
+                                        open: false,
+                                        value: GridSidebarValue.Charts
+                                    },
+                                }}
+                                pageSizeOptions={[5, 10]}
+                                chartsIntegration
+                                showToolbar
+                                slots={{
+                                    toolbar: CustomToolbar,
+                                    chartsPanel: GridChartsPanel,
+                                }}
+                                experimentalFeatures={{
+                                    charts: true,
+                                }}
+                                slotProps={{
+                                    chartsPanel: {
+                                        schema: configurationOptions
+                                    },
+                                    loadingOverlay: {
+                                        variant: 'skeleton',
+                                        noRowsVariant: 'skeleton',
+                                    },
+                                    toolbar: {
+                                        title: 'INVENTARIO DE PRODUCTOS',
+                                        addButton: (
+                                            <Tooltip title="Nueva Producto">
+                                                <ToolbarButton onClick={() => {
+                                                    navigate('new')
+                                                }}>
+                                                    <AddRounded />
+                                                </ToolbarButton>
+                                            </Tooltip>
+                                        )
+                                    }
+                                }}
+                                sx={{
+                                    borderRadius: 0,
+                                    borderLeft: 0,
+                                    borderRight: 0,
+
+                                    flexGrow: 1,
+                                    width: '100%',
+                                    minHeight: "100%",
+                                    "& .MuiDataGrid-main": {
+                                        width: '100%'
+                                    },
+                                    "&::-webkit-scrollbar": {
+                                        width: "5px",
+                                        display: 'none'
+                                    },
+                                    '& .classname--header': {
+                                        p: 0,
+                                    },
+                                    '& .classname--cell': {
+                                        p: 0,
+                                    }
+                                }}
+                            />
+                        </Fade>
                         <GridChartsRendererProxy id='main' renderer={ChartsRenderer}/>
                     </GridChartsIntegrationContextProvider>
                     : <Box sx={{ width: '100%', height: '100%' }}>

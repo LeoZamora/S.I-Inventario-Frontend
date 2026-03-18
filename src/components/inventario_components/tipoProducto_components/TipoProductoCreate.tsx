@@ -17,7 +17,7 @@ import type { TipoProducto } from "../../../helpers/interfaces";
 import { queries } from "../../../services/endPoints";
 import { IOSSwitch } from "../../../reusable/Switch";
 import { Typography, Tooltip } from '@mui/material';
-import { formateDate } from "../../../helpers/helpers";
+import { formateDate } from "../../../helpers/helpers.tsx";
 
 type Props = {
     open: boolean;
@@ -55,7 +55,6 @@ export default function TipoProductoCreate({ open = false, isEdit, onClose, idTi
 
             const result = await requestHttp.postTipoProducto(dataForm)
             if (result?.code === 200) {
-                console.log(result);
                 onClose()
             } else {
                 console.log(result);

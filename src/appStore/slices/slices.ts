@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import type { MenuItem } from '../../helpers/types'
 
 type Inventario = {
     name: string
@@ -26,7 +27,8 @@ export const inventariosSlice = createSlice({
     name: 'inventarios',
     initialState: {
         inventarios: [] as Inventario[],
-        idInventario: 0
+        idInventario: 0,
+        subModulesDrawer: [] as MenuItem[]
     },
     reducers: {
         setInventarios: (state, action) => {
@@ -38,5 +40,8 @@ export const inventariosSlice = createSlice({
         setInvetarioSelected: (state, action) => {
             state.idInventario  = action.payload
         },
+        setSubMudulesDrawer: (state, action) => {
+            state.subModulesDrawer = action.payload
+        }
     }
 })

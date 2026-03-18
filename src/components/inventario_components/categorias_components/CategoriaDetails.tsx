@@ -5,7 +5,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import RequestGraph from '../../../services/requestGraph';
 import { queries } from '../../../services/endPoints';
-import { formateDate } from '../../../helpers/helpers';
+import { formateDate } from '../../../helpers/helpers.tsx';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { type GridCellParams, GridActionsCellItem, GridActionsCell } from '@mui/x-data-grid-premium'
 import {

@@ -18,26 +18,36 @@ import {
     type optionNavigation,
     type optionSelected,
 } from "../context/Inventario.context";
-import { inventarioModuleConfig } from "../config/miDraweConfig";
+import { inventarioModuleConfig, solicitudesModuleConfig } from "../config/miDraweConfig";
+import { useAppDispatch, useAppSelector } from "../appStore/hooks/hook";
+import type { MenuItem } from '../helpers/types'
+import { inventariosSlice } from '../appStore/slices/slices';
 
 type Props = {
     drawerWidth?: number;
 };
 
-
 export default function AppShell({drawerWidth = 230}: Props) {
-    const [open, setOpen] = React.useState(true)
     const location = useLocation()
     const navigate = useNavigate()
+    const dispatch = useAppDispatch()
+    const subModulesStore: MenuItem[] = useAppSelector(state => state.inventario.subModulesDrawer)
+    const { setSubMudulesDrawer } = inventariosSlice.actions
+
+    const [open, setOpen] = React.useState(true)
     const [opcNavigation, setOpcNavigation] = useState<optionNavigation | null>(null)
     const [selected, setSelected] = useState<optionSelected | null>(null)
+    const [modulesMiniDrawer, setModules] = useState<MenuItem[]>([])
+    const [subModulesMiniDrawer, setSubModules] = useState<MenuItem[]>([])
 
-    const { subModuleInventario, inventarios, miniDrawerInv } = inventarioModuleConfig()
+    const { subModuleInventario, inventarios } = inventarioModuleConfig()
+    const { subModulosSolicitud } = solicitudesModuleConfig()
+
 
     const value = useMemo(() => ({ selected, setSelected }), [selected])
     const valueNavigation = useMemo(() => ({ opcNavigation, setOpcNavigation}), [opcNavigation])
 
-    const showMiniDrawer = miniDrawerInv.includes(location.pathname) || location.pathname === '/inventario'
+    const showMiniDrawer = location.pathname.includes('/inventario') || location.pathname.includes('/solicitudes')
 
     useEffect(() => {
         if (location.pathname === '/') {
@@ -70,6 +80,23 @@ export default function AppShell({drawerWidth = 230}: Props) {
                     <AppDrawer
                         open={open}
                         drawerWidth={drawerWidth}
+                        onClick={(opc) => {
+                            dispatch(setSubMudulesDrawer([]))
+                            switch (opc) {
+                                case "inv":
+                                    dispatch(setSubMudulesDrawer(subModuleInventario))
+                                    setSubModules(subModuleInventario)
+                                    setModules(inventarios)
+                                    break;
+                                case "sol":
+                                    dispatch(setSubMudulesDrawer(subModulosSolicitud))
+                                    setSubModules(subModulosSolicitud)
+                                    setModules([])
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }}
                         onClose={() => setOpen(false)}
                     />
 
@@ -117,25 +144,14 @@ export default function AppShell({drawerWidth = 230}: Props) {
                             </Typography>
                         </Breadcrumbs>
 
-                        {/* <Fade in>
-                            <Box sx={{
-                                height: '100%',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                "& .MuiBox-root": {
-                                    backgroundColor: 'white'
-                                }
-                            }}>
-                            </Box>
-                        </Fade> */}
                         <Outlet />
                     </Box>
 
                     <MiniAppDrawer
                         open={open}
                         show={showMiniDrawer}
-                        items={subModuleInventario}
-                        inventory={inventarios}
+                        subModules={subModulesStore ?? subModulesMiniDrawer}
+                        modules={modulesMiniDrawer}
                         onClose={() => setOpen(false)}
                     />
                 </Box>

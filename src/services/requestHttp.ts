@@ -79,9 +79,26 @@ export default class RequestHttp {
     }
 
     // PRODUCTOS
-        async postProducto(data: Producto) {
+    async postProducto(data: Producto) {
         try {
             const result = await axios.post(endPoints.postProducto, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async putProducto(data: Producto, idProducto: number) {
+        try {
+            const result = await axios.put(`${endPoints.postProducto}/${idProducto}`, data)
             return {
                 code: result.data?.code ?? result.status,
                 msg: result.data?.msg,
@@ -207,6 +224,28 @@ export default class RequestHttp {
             const result = await axios.get(endPoints.getCodigoInventario)
             return {
                 code: result.data,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+
+    // PARA GUARDAR ITEMS DE COMBOBOX
+    async postItem(data: {
+        nombre: string
+        descripcion?: string | null
+    }, url: string) {
+        try {
+            const result = await axios.post(url, data)
+            return {
+                code: result.data?.code ?? result.status,
                 msg: result.data?.msg,
             }
         } catch (error: unknown) {

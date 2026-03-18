@@ -9,11 +9,13 @@ import TiposProductos from "../components/inventario_components/TipoProducto";
 import Proveedores from "../components/inventario_components/Proveedores";
 import InventarioArmas from "../components/inventario_components/InventarioArmas";
 import InventarioProductos from "../components/inventario_components/InventarioProductos";
-import UnderConstruction from "../reusable/BuildComp";
+// import UnderConstruction from "../reusable/BuildComp";
 import BodegasUbicaciones from "../components/inventario_components/Logistica";
 import DetailsCategory from "../components/inventario_components/categorias_components/CategoriaDetails";
 import DetailsUbicacion from "../components/inventario_components/bodegas_components/LogisticaDetails";
 import ProductoCreate from "../components/inventario_components/inventario_components/ProductoCreate";
+import Solicitudes from "../components/movimientos_inventario/Solicitudes";
+import CreateSolicitud from "../components/movimientos_inventario/solicitudes_components/CreateSolicitud";
 
 const routes = [
     {
@@ -26,12 +28,8 @@ const routes = [
                 path: 'productos',
                 element: <InventarioProductos />,
                 children: [
-                    // {
-                    //     path: ':id',
-                    //     element: <DetailsCategory />,
-                    // }
                     {
-                        path: 'new',
+                        path: ':id?',
                         element: <ProductoCreate />,
                     }
                 ]
@@ -75,11 +73,23 @@ const routes = [
         ]
     },
     {
-        path: 'movimientos-inventario',
-        component: <UnderConstruction />,
-        pathnameBase: 'Movimientos de Inventario',
-        children: []
+        path: 'solicitudes',
+        component: <Solicitudes />,
+        pathnameBase: 'Solicitudes',
+        children: [
+            {
+                path: ':id?',
+                element: <CreateSolicitud />,
+                children: []
+            },
+        ]
     },
+    // {
+    //     path: 'ordenes',
+    //     component: <Solicitudes />,
+    //     pathnameBase: 'Ordenes',
+    //     children: []
+    // },
 ]
 
 export default function RouterApp() {
