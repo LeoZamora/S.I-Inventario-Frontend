@@ -4,22 +4,18 @@ import {
     ListItemButton, ListItemIcon,
     alpha, Tooltip, Toolbar
 } from "@mui/material";
-import React from "react";
+// import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useInventarioContext } from "../context/Inventario.context";
-import type { SvgIconComponent } from "@mui/icons-material";
+import { type MenuItem } from '../helpers/types'
+import { iconMap } from '../helpers/helpers.tsx';
 
-type MenuItem = {
-    icon: SvgIconComponent,
-    title: string,
-    path: string,
-}
 
 type Props = {
     open: boolean,
     show: boolean,
-    items: MenuItem[],
-    inventory?: MenuItem[] | null
+    subModules: MenuItem[],
+    modules?: MenuItem[] | null
     onClose: () => void
 }
 
@@ -43,10 +39,10 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
     }
 }));
 
-export default function MiniAppDrawer({ open, show, items, inventory, onClose }: Props) {
+export default function MiniAppDrawer({ open, show, subModules, modules, onClose }: Props) {
     const drawerWidth = 50;
-    const [itemsState] = React.useState(items)
-    const [inventoriesModule] = React.useState(inventory)
+    // const [itemsState] = useState(subModules)
+    // const [module] = useState(modules)
     const { selected, setSelected } = useInventarioContext()
 
     return (
@@ -76,71 +72,77 @@ export default function MiniAppDrawer({ open, show, items, inventory, onClose }:
             >
                 <DrawerHeader variant="dense" />
                 <List dense>
-                    {itemsState.map((item, i) => (
-                        <Link key={i}
-                            to={item.path}
-                            onClick={() => setSelected({ title: item.title, path: item.path })}
-                        >
-                            <Tooltip key={i} title={item.title} arrow placement="left"
-                                slotProps={{
-                                    tooltip: {
-                                        sx: {
-                                            borderRadius: 0.5
-                                        }
-                                    }
-                                }}
+                    {subModules.map((item, i) => {
+                        const IconComponent = iconMap[item.icon];
+                        return (
+                            <Link key={i}
+                                to={item.path}
+                                onClick={() => setSelected({ title: item.title, path: item.path })}
                             >
-                                <ListItem disablePadding dense>
-                                    <StyledListItemButton selected={selected?.path === item.path}>
-                                        <ListItemIcon sx={[{
-                                                minWidth: 0,
-                                                justifyContent: 'center',
-                                                mr: 'auto'
-                                            }]
-                                        }>
-                                            <item.icon></item.icon>
-                                        </ListItemIcon>
-                                    </StyledListItemButton>
-                                </ListItem>
-                            </Tooltip>
-                            <Divider sx={{ mx: 1 }}/>
-                        </Link>
-                    ))}
+                                <Tooltip key={i} title={item.title} arrow placement="left"
+                                    slotProps={{
+                                        tooltip: {
+                                            sx: {
+                                                borderRadius: 0.5
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <ListItem disablePadding dense>
+                                        <StyledListItemButton selected={selected?.path === item.path}>
+                                            <ListItemIcon sx={[{
+                                                    minWidth: 0,
+                                                    justifyContent: 'center',
+                                                    mr: 'auto'
+                                                }]
+                                            }>
+                                                {IconComponent}
+                                            </ListItemIcon>
+                                        </StyledListItemButton>
+                                    </ListItem>
+                                </Tooltip>
+                                <Divider sx={{ mx: 1 }}/>
+                            </Link>
+                        )
+                    })}
                 </List>
 
                 <Box sx={{ flexGrow: 1 }} />
 
                 <List dense>
-                    {inventoriesModule?.map((item, i) => (
-                        <Link key={i}
-                            to={item.path}
-                            onClick={() => setSelected({ title: item.title, path: item.path })}
-                        >
-                            <Tooltip key={i} title={item.title} arrow placement="left"
-                                slotProps={{
-                                    tooltip: {
-                                        sx: {
-                                            borderRadius: 0.5
-                                        }
-                                    }
-                                }}
+                    {modules?.map((item, i) => {
+                        const IconComponent = iconMap[item.icon];
+                        return (
+                            <Link key={i}
+                                to={item.path}
+                                onClick={() => setSelected({ title: item.title, path: item.path })}
                             >
-                                <ListItem disablePadding dense>
-                                    <StyledListItemButton selected={selected?.path === item.path}>
-                                        <ListItemIcon sx={[{
-                                                minWidth: 0,
-                                                justifyContent: 'center',
-                                                mr: 'auto'
-                                            }]
-                                        }>
-                                            <item.icon></item.icon>
-                                        </ListItemIcon>
-                                    </StyledListItemButton>
-                                </ListItem>
-                            </Tooltip>
-                            <Divider sx={{ mx: 1 }}/>
-                        </Link>
-                    ))}
+                                <Tooltip key={i} title={item.title} arrow placement="left"
+                                    slotProps={{
+                                        tooltip: {
+                                            sx: {
+                                                borderRadius: 0.5
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <ListItem disablePadding dense>
+                                        <StyledListItemButton selected={selected?.path === item.path}>
+                                            <ListItemIcon sx={[{
+                                                    minWidth: 0,
+                                                    justifyContent: 'center',
+                                                    mr: 'auto'
+                                                }]
+                                            }>
+                                                {IconComponent}
+                                            </ListItemIcon>
+                                        </StyledListItemButton>
+                                    </ListItem>
+                                </Tooltip>
+                                <Divider sx={{ mx: 1 }}/>
+                            </Link>
+                        )
+                    })}
                 </List>
             </Drawer>
         </Box>

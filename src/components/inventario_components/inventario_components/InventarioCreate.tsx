@@ -17,7 +17,7 @@ import type { InventarioQL } from "../../../helpers/interfaces";
 import { queries } from "../../../services/endPoints";
 import { IOSSwitch } from "../../../reusable/Switch";
 import { Typography, Tooltip } from '@mui/material';
-import { formateDate, generatePath } from "../../../helpers/helpers";
+import { formateDate, generatePath } from "../../../helpers/helpers.tsx";
 
 type Props = {
     open: boolean;

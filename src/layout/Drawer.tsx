@@ -2,28 +2,27 @@ import {
     Box, List,
     Drawer, Divider, ListItem,
     ListItemButton, ListItemIcon,
-    ListItemText,
-    Typography,
-    styled,
-    Avatar,
-    alpha,
+    ListItemText, Typography,
+    styled, Avatar,
+    alpha, Collapse,
     useTheme,
     ListSubheader,
 } from "@mui/material";
 
 import {
     Logout as LogoutIcon,
-    HomeRounded,
-    InventoryRounded,
-    CompareArrowsRounded
+    HomeRounded, ExpandLessRounded, ExpandMoreRounded,
+    InventoryRounded, PendingActions,
+    CompareArrowsRounded, ReceiptLong,
 } from "@mui/icons-material";
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigationContext, useInventarioContext } from "../context/Inventario.context";
 
 type Props = {
     open: boolean,
     drawerWidth: number,
+    onClick: (opc: string) => void
     onClose: () => void
 }
 
@@ -71,21 +70,34 @@ const StyledListItemIcon = styled(ListItemIcon)(() => ({
     color: "black",
 }));
 
-export default function AppDrawer({ open, drawerWidth, onClose }: Props) {
+export default function AppDrawer({ open, drawerWidth, onClose, onClick }: Props) {
     const theme = useTheme();
     const { opcNavigation, setOpcNavigation } = useNavigationContext()
     const { setSelected } = useInventarioContext()
-    const [selectedOption, setSelectedOpc] = React.useState(opcNavigation?.title)
+    const [selectedOption, setSelectedOpc] = useState(opcNavigation?.title)
+    const [openOption, setOpenOpc] = useState(false)
 
     const mainMenuItems = [
         { text: 'Inicio', icon: <HomeRounded />,
-            selected: true, route: '/home'
+            selected: true, route: '/home', expand: false,
+            type: 'ini'
         },
         { text: 'Inventario', icon: <InventoryRounded />,
-            selected: false, route: '/inventario', subRoute: '/inventario'
+            selected: false, route: '/inventario', subRoute: '/inventario',
+            expand: false, type: 'inv'
         },
-        { text: 'M. Inventarios', icon: <CompareArrowsRounded />,
-            selected: false, route: '/movimientos-inventario', subRoute: null
+        { text: 'Mov. Inventario', icon: <CompareArrowsRounded />,
+            selected: false, route: '/movimientos-inventario', subRoute: null,
+            subItems: [
+                { text: 'Solicitudes', icon: <PendingActions />,
+                    selected: false, route: '/solicitudes', subRoute: '/solicitudes'
+                },
+                { text: 'Órdenes', icon: <ReceiptLong />,
+                    selected: false, route: '/ordenes', subRoute: '/ordenes'
+                },
+            ],
+            type: 'sol',
+            expand: true
         },
     ];
 
@@ -176,7 +188,7 @@ export default function AppDrawer({ open, drawerWidth, onClose }: Props) {
                 <Divider sx={{ my: 2, mx: 3 }} />
 
                 {/* Menú principal */}
-                <List sx={{ px: 1, color: 'inherit' }} dense component={'nav'}
+                <List sx={{ px: 1, color: 'inherit' }} dense component='nav'
                     subheader={
                         <ListSubheader component={'div'} sx={{
                             backgroundColor: 'transparent',
@@ -187,32 +199,93 @@ export default function AppDrawer({ open, drawerWidth, onClose }: Props) {
                         </ListSubheader>
                     }>
                     {mainMenuItems.map((item, i) => (
-                        <Link to={item.route}
-                            key={i} onClick={() => {
-                                setOpcNavigation({
-                                    title: item.text,
-                                    path: item.route,
-                                })
-
-                                localStorage.setItem('lastOption', item.text)
-                                setSelected({
-                                    title: '',
-                                    path: null
-                                })
-                            }}
-                        >
-                            <ListItem disablePadding>
-                                <StyledListItemButton selected={selectedOption === item.text}
-                                    onClick={() => setSelectedOpc(item.text)}>
-                                    <StyledListItemIcon>
-                                        {item.icon}
-                                    </StyledListItemIcon>
-                                    <ListItemText>
-                                        {item.text}
-                                    </ListItemText>
-                                </StyledListItemButton>
-                            </ListItem>
-                        </Link>
+                        !item.expand ?
+                            <Link to={item.route}
+                                key={i} onClick={() => {
+                                    setOpcNavigation({
+                                        title: item.text,
+                                        path: item.route,
+                                    })
+                                    localStorage.setItem('lastOption', item.text)
+                                    setSelected({
+                                        title: '',
+                                        path: null
+                                    })
+                                }}
+                            >
+                                <ListItem disablePadding
+                                    secondaryAction={
+                                        item.expand ? (openOption ? <ExpandLessRounded /> : <ExpandMoreRounded />) : null
+                                    }
+                                >
+                                    <StyledListItemButton selected={selectedOption === item.text}
+                                        onClick={() => {
+                                            onClick(item.type)
+                                            setSelectedOpc(item.text)
+                                            if (item.expand) {
+                                                setOpenOpc(!openOption)
+                                            }
+                                        }}>
+                                        <StyledListItemIcon>
+                                            {item.icon}
+                                        </StyledListItemIcon>
+                                        <ListItemText>
+                                            {item.text}
+                                        </ListItemText>
+                                    </StyledListItemButton>
+                                </ListItem>
+                            </Link>
+                            : <>
+                                <ListItem disablePadding
+                                    key={i}
+                                    secondaryAction={
+                                        item.expand ? (openOption ? <ExpandLessRounded /> : <ExpandMoreRounded />) : null
+                                    }
+                                >
+                                    <StyledListItemButton selected={selectedOption === item.text}
+                                        onClick={() => {
+                                            setSelectedOpc(item.text)
+                                            if (item.expand) {
+                                                setOpenOpc(!openOption)
+                                            }
+                                        }}
+                                    >
+                                        <StyledListItemIcon>
+                                            {item.icon}
+                                        </StyledListItemIcon>
+                                        <ListItemText>
+                                            {item.text}
+                                        </ListItemText>
+                                    </StyledListItemButton>
+                                </ListItem>
+                                {item.subItems && item.subItems.map((subItem, j) => (
+                                        <Collapse in={openOption} timeout="auto" unmountOnExit
+                                            sx={{
+                                                mx: 1
+                                            }}
+                                        >
+                                            <Link to={subItem.route} key={j}>
+                                                <ListItem component="div" disablePadding
+                                                    onClick={() => {
+                                                        onClick(item.type)
+                                                        localStorage.setItem('lastOption', subItem.text)
+                                                    }}
+                                                >
+                                                    <StyledListItemButton selected={selectedOption === subItem.text}
+                                                        onClick={() => setSelectedOpc(subItem.text)}>
+                                                        <StyledListItemIcon sx={{ ml: 2 }}>
+                                                            {subItem.icon}
+                                                        </StyledListItemIcon>
+                                                        <ListItemText>
+                                                            {subItem.text}
+                                                        </ListItemText>
+                                                    </StyledListItemButton>
+                                                </ListItem>
+                                            </Link>
+                                        </Collapse>
+                                    ))
+                                }
+                            </>
                     ))}
                 </List>
 

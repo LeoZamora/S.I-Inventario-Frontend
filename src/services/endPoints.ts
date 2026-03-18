@@ -21,6 +21,26 @@ export const endPoints = {
     // PRODUCTOS
     getCodigoProducto: 'productos/codigo-recomendado',
     postProducto: 'productos',
+
+    // EQUIPOS DE COMPUTO
+    postTipoAlm: 'equipos-computo/tipoAlmacenamiento',
+    postTipoConexion: 'equipos-computo/tipoConexion',
+    postTipoDispositivo: 'equipos-computo/tipoDispositivo',
+    postTipoImpresora: 'equipos-computo/tipoImpresora',
+
+    getTipoAlm: 'equipos-computo/tipoAlmacenamiento',
+    getTipoConexion: 'equipos-computo/tipoConexion',
+    getTipoDispositivo: 'equipos-computo/tipoDispositivo',
+    gteTipoImpresora: 'equipos-computo/tipoImpresora',
+
+    //ARMAS
+    postTipoCalibre: 'armas/tipoCalibre',
+    postTipoArma: 'armas/tipoArma',
+    posSistemaDisparo: 'armas/sistemaDisparo',
+
+    getTipoCalibre: 'armas/tipoCalibre',
+    getTipoArma: 'armas/tipoArma',
+    getSistemaDisparo: 'armas/sistemaDisparo',
 }
 
 export const queries = {
@@ -87,6 +107,63 @@ export const queries = {
             }
         }
     `,
+    GET_PRODUCTO_BY_ID: `
+        query GetProductoById($idProducto: Int!) {
+            findProductoById(idProducto: $idProducto) {
+                idTipoProducto
+                idSubCategoria
+                idProducto
+                codigoProducto
+                nombreProducto
+                precio
+                marca
+                modelo
+                imagen
+                precio
+                observaciones
+                detallesEspecificos {
+                    ... on EquiposComputo {
+                        ramGB
+                        cantidadAlm
+                        procesador
+                        idTipoDispositivo
+                        idTipoAlmacenamiento
+                    }
+                    ... on ArmasFuego {
+                        numSerie
+                        capacidadCargador
+                        longitudCanon
+                        licencia
+                        material
+                        idCalibre
+                        idTipoArma
+                        idSistemaDisparo
+                    }
+                    ... on Mobiliario {
+                        color
+                        material
+                    }
+                }
+                caracteristicasEspeciales
+                subCategoria {
+                    categoria {
+                        idCategoria
+                        codigoSubCategoria
+                    }
+                }
+                inventarioProductos {
+                    idInventario
+                    idProductoInventario
+                    estado
+                    stockMin
+                    stockMax
+                    stock
+                }
+                fechaRegistro
+                usuarioRegistro
+            }
+        }
+    `,
     GET_TIPO_PRODUCTOS: `
         query {
             findTipoProducto {
@@ -117,9 +194,6 @@ export const queries = {
                 fechaRegistro
                 usuarioRegistro
                 estado
-                bodegas {
-
-                }
             }
         }
     `,
@@ -424,4 +498,27 @@ export const queries = {
             }
         }
     `,
+
+    // SOLICITUDES
+    GET_SOLICITUDES: `
+        query {
+            findSolicitudes {
+                idSolicitud
+                codigoSolicitud
+                solicitante
+                observaciones
+                motivo
+                fechaRegistro
+                usuarioRegistro
+                idBodegaSolicitada
+                idBodegaSolicitante
+                idTipoSolicitud
+                estadoSolicitud {
+                    estados {
+                        nombreEstado
+                    }
+                }
+            }
+        }
+    `
 }

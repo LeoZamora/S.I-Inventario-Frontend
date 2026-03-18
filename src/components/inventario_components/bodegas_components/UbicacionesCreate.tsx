@@ -17,7 +17,7 @@ import RequestHttp from "../../../services/requestHttp";
 import RequestGraph from "../../../services/requestGraph";
 import { queries } from "../../../services/endPoints";
 import { IOSSwitch } from "../../../reusable/Switch";
-import { formateDate } from "../../../helpers/helpers";
+import { formateDate } from "../../../helpers/helpers.tsx";
 
 type Props = {
     open: boolean;
