@@ -129,6 +129,63 @@ const productoSchema = z.object({
     detallesEspecificos: detalleSchema
 })
 
+
+// DETAILS PROODUCT
+const detailsProductSchema = z.object({
+    idDetalleSolicitud: z.number().optional().nullable(),
+    idSolicitud: z.number().optional().nullable(),
+    idInventario: z.number().min(1, "El id del inventario es obligatorio"),
+    idProducto: z.number().min(1, "El id del producto es obligatorio"),
+    cantidad: z.number().min(1, "Ingrese una cantidad"),
+    precioUnitario: z.number().min(1, "Ingrese el precio unitario del producto"),
+    observaciones: z.string().optional().nullable(),
+    total: z.number().optional(),
+})
+
+// SOLICITUDES
+const solicitudesSchema = z.object({
+    // idSolicitud: z.number().optional().nullable(),
+    codigoSolicitud: z.string().min(3, "El codigo debe cargarse automaticamente"),
+    solicitante: z.string().min(3, "El nombre del solicitante es obligatorio"),
+    observaciones: z.string().optional().nullable(),
+    motivo: z.string().min(3, "Ingrese el motivo de la solicitud"),
+    usuarioRegistro: z.string("El usuario de registro es obligatorio").min(3, "El usuario debe tener almenos 3 caracteres"),
+    idUbicacionSolicitante: z.number().min(1, "Elija una ubicacion solicitante"),
+    idBodegaSolicitante: z.number().min(1, "Elija la bodega solicitante"),
+    idBodegaSolicitada: z.number().optional().nullable(),
+    idUbicacionSolicitada: z.number().optional().nullable(),
+    idTipoSolicitud: z.number().min(1, "Elija la un tipo de solicitud"),
+    // detalles: z.array(detailsProductSchema).nonempty("Debe incluir al menos un producto")
+})
+
+// ORDENES
+const ordenesSchema = z.object({
+    // idOrden: z.number().optional().nullable(),
+    codigoOrden: z.string().min(3, "El codigo debe cargarse automaticamente"),
+    noReferencia: z.string().optional().nullable(),
+    observaciones: z.string().optional().nullable(),
+    usuarioRegistro: z.string("El usuario de registro es obligatorio").min(3, "El usuario debe tener almenos 3 caracteres"),
+    fechaEmision: z.string().min(1, "La fecha de emisión es obligatoria"),
+    idTipoOrden: z.number().min(1, "Elija la un tipo de orden"),
+    idSolicitud: z.number().min(1, "Elija la un tipo de orden"),
+    // detalles: z.array(detailsProductSchema).nonempty("Debe incluir al menos un producto")
+})
+
+// TIPO SOLICTUD VALIDATION
+const tipoSolicitudSchema = z.object({
+    nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+    descripcion: z.string().optional().nullable(),
+    usuarioRegistro: z.string("El usuario de registro es obligatorio").min(3, "El usuario debe tener almenos 3 caracteres")
+})
+
+
+export const loginSchema = z.object({
+    usuario: z.string('El usuario es obligatorio').min(3, 'El usuario es obligatorio'),
+    password: z.string('La contraseña es obligatoria').min(6, 'La contraseña es obligatoria'),
+    // passVerify: z.string('Repita su contraseña').min(6, 'La contraseña debe tener un minimo de 6 caracteres'),
+})
+
+
 export const validationSchema = {
     categoriasSchema,
     tipoProductoSchema,
@@ -138,5 +195,9 @@ export const validationSchema = {
     inventarioSchema,
     productoSchema,
     itemComboboxSchema,
-    detalleSchema
+    detalleSchema,
+    solicitudesSchema,
+    detailsProductSchema,
+    tipoSolicitudSchema,
+    ordenesSchema
 }

@@ -48,3 +48,13 @@ export function solicitudesModuleConfig() {
         ],
     }
 }
+
+export function ordenesModuleConfig() {
+    return {
+        subModulosOrdenes: [
+            { icon: "tipoOrden", title: 'Tipos de Ordenes',
+                path: '/ordenes/tipo-orden'
+            },
+        ],
+    }
+}

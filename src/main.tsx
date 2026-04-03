@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+// import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
@@ -10,6 +10,7 @@ import { LicenseInfo } from '@mui/x-license';
 import { PersistGate } from 'redux-persist/integration/react'
 import { persistor, store } from './appStore/store.ts'
 import { Provider } from 'react-redux'
+import { AliveScope } from 'react-activation'
 
 // Activa la licencia
 LicenseInfo.setLicenseKey(
@@ -23,16 +24,18 @@ axios.defaults.baseURL = 'http://localhost:3010/'
 // axios.defaults.baseURL = 'http://localhost:8110/'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  // <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
-      <Provider store={store}>
-          <PersistGate persistor={persistor}>
-            <App />
-          </PersistGate>
-      </Provider>
+        <Provider store={store}>
+            <PersistGate persistor={persistor}>
+              <AliveScope>
+                <App />
+              </AliveScope>
+            </PersistGate>
+        </Provider>
       </BrowserRouter>
     </ThemeProvider>
-  </StrictMode>
+  // </StrictMode>
 )

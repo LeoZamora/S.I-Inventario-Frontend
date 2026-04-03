@@ -184,7 +184,7 @@ export default function InventarioCreate({ open = false, isEdit, onClose, idInve
 
 
     return (
-        <Dialog open={open} onClose={(event, reason) => {
+        <Dialog open={open} onClose={(_, reason) => {
             if (reason === 'backdropClick' || reason === "escapeKeyDown") {
                 setShakeDialog(true)
 

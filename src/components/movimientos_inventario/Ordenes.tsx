@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import RequestHttp from '../../services/requestHttp';
 import  { formateDate } from '../../helpers/helpers.tsx';
 import
     {type  GridColDef }
@@ -19,16 +18,15 @@ import {
     GridSidebarValue, GridActionsCellItem, GridActionsCell
 } from '@mui/x-data-grid-premium'
 import { type GridCellParams } from '@mui/x-data-grid-premium'
-import { endPoints, queries } from '../../services/endPoints';
+import { queries } from '../../services/endPoints';
 import { ChartsRenderer, configurationOptions } from '@mui/x-charts-premium'
 import RequestGraph from '../../services/requestGraph';
 import CustomToolbar from '../../reusable/ToolbarGrid';
 import { useInventarioContext } from '../../context/Inventario.context';
 import { useNavigate } from 'react-router-dom';
-import ViewSolicitud from './solicitudes_components/ViewSolicitud';
+import ViewOrden from './ordenes_conponents/ViewOrden';
 import { RemoveRedEyeRounded } from '@mui/icons-material'
 
-const requstHttp = new RequestHttp
 
 type AnyRow = Record<string, unknown> & { id: string | number }
 
@@ -36,29 +34,42 @@ const paginationModel = { page: 0, pageSize: 5 };
 
 const requestGraph = new RequestGraph()
 
-type SolicitudRow = {
-    idSolicitud: number;
-    codigoSolicitud: string;
-    solicitante: string;
+type OrdenesRow = {
+    idOrden: number;
+    codigoOrden: string;
+    noReferencia: string | null;
     observaciones: string;
-    motivo: string;
+    idSolicitud: number;
+    idTipoOrden: number;
+    fechaEmision: string | Date;
     fechaRegistro: string | Date;
     usuarioRegistro: string;
-    estadoSolicitud: {
+    tipoOrden: {
+        nombre: string
+    }
+    solicitudes: {
+        codigoSolicitud: string
+    }
+    estadoOrden: {
         estados: {
             nombreEstado: string
         }
     }[]
 }
 
-export default function Solicitudes() {
+export default function Ordenes() {
     const location = useLocation()
     const navigate = useNavigate()
     const apiRef = useGridApiRef()
-    const [openDialog, setOpenDialog] = useState(false)
-    const [idSolicitud, setIdSolicitud] = useState<number>()
 
-    const isRootPath = location.pathname === '/solicitudes'
+    const isRootPath = location.pathname === '/ordenes'
+
+    const [rows, setRows] = useState<AnyRow[]>([]);
+    const [columns, setColumns] = useState<GridColDef[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false)
+    const [idOrden, setIdOrden] = useState<number | null>(0)
+    const {setSelected} = useInventarioContext()
 
     const headersColumns: GridColDef[] = useMemo(() => [{
             field: 'opc',
@@ -107,7 +118,7 @@ export default function Solicitudes() {
                                 label="Editar"
                                 showInMenu
                                 onClick={() => {
-                                    navigate(`${params.row.idSolicitud}`)
+                                    navigate(`${params.row.idOrden}`)
                                 }}
                             />
 
@@ -117,7 +128,7 @@ export default function Solicitudes() {
                                 showInMenu
                                 onClick={() => {
                                     setOpenDialog(true)
-                                    setIdSolicitud(params.row.idSolicitud)
+                                    setIdOrden(params.row.idOrden)
                                 }}
                             />
                         </GridActionsCell>
@@ -125,45 +136,57 @@ export default function Solicitudes() {
                 )
             }
         }, {
-            field: 'codigoSolicitud',
+            field: 'codigoOrden',
             headerAlign: 'center',
             flex: 1,
+            headerClassName: 'classname--header',
             minWidth: 150,
             align: 'center',
-            resizable: false,
-            headerName: 'Código Solicitud',
+            resizable: true,
+            headerName: 'Código Orden',
         },
         {
-            field: 'solicitante',
+            field: 'noReferencia',
             headerAlign: 'center',
             flex: 1,
+            headerClassName: 'classname--header',
             minWidth: 150,
             align: 'center',
-            resizable: false,
-            headerName: 'Solicitante',
+            resizable: true,
+            headerName: 'No. Referencia',
         }, {
-            field: 'observaciones',
+            field: 'solicitudes',
             headerAlign: 'center',
             flex: 1,
+            headerClassName: 'classname--header',
             minWidth: 150,
             align: 'center',
-            resizable: false,
-            headerName: 'Observaciones',
+            resizable: true,
+            headerName: 'Código Solicitud',
         }, {
-            field: 'motivo',
+            field: 'fechaEmision',
             headerAlign: 'center',
             flex: 1,
+            headerClassName: 'classname--header',
             minWidth: 150,
             align: 'center',
-            resizable: false,
-            headerName: 'Motivo',
+            resizable: true,
+            headerName: 'Fecha Emisión',
+            renderCell: (params: GridCellParams) => {
+                return (
+                    <span>
+                        { formateDate(String(params.value), true) }
+                    </span>
+                )
+            }
         }, {
             field: 'fechaRegistro',
             headerAlign: 'center',
             flex: 1,
+            headerClassName: 'classname--header',
             minWidth: 150,
             align: 'center',
-            resizable: false,
+            resizable: true,
             headerName: 'Fecha Registro',
             renderCell: (params: GridCellParams) => {
                 return (
@@ -173,38 +196,46 @@ export default function Solicitudes() {
                 )
             }
         }, {
+            field: 'observaciones',
+            headerAlign: 'center',
+            flex: 1,
+            headerClassName: 'classname--header',
+            minWidth: 150,
+            align: 'center',
+            resizable: true,
+            headerName: 'Observaciones',
+        }, {
             field: 'usuarioRegistro',
             headerAlign: 'center',
             flex: 1,
+            headerClassName: 'classname--header',
             minWidth: 150,
             align: 'center',
-            resizable: false,
+            resizable: true,
             headerName: 'Usuario Registro',
         }, {
             field: 'estado',
             headerAlign: 'center',
             flex: 1,
+            headerClassName: 'classname--header',
             minWidth: 150,
             align: 'center',
-            resizable: false,
+            resizable: true,
             headerName: 'Estado',
         },
     ], [navigate])
 
-    const [rows, setRows] = useState<AnyRow[]>([]);
-    const [columns, setColumns] = useState<GridColDef[]>([]);
-    const [loading, setLoading] = useState(false);
-    const {setSelected} = useInventarioContext()
-
-    const getSolicitudes = useCallback(async() => {
+    const getOrdenes = useCallback(async() => {
         setLoading(true)
-        const result = await requestGraph.queryGraph(queries.GET_SOLICITUDES)
+        const result = await requestGraph.queryGraph(queries.GET_ORDENES)
         setLoading(false)
 
-        const data = result?.findSolicitudes.map((item: SolicitudRow) => {
+        const data = result?.findAllOrdenes.map((item: OrdenesRow) => {
             return {
                 ...item,
-                estado: item.estadoSolicitud.reverse()[0].estados.nombreEstado
+                solicitudes: item.solicitudes.codigoSolicitud,
+                noReferencia: item.noReferencia || 'N/A',
+                estado: item.estadoOrden.reverse()[0].estados.nombreEstado
             }
         })
 
@@ -226,31 +257,25 @@ export default function Solicitudes() {
     }, [headersColumns])
 
     const load = useCallback(async (alive: boolean) => {
-        getSolicitudes()
-
         try {
             setLoading(true)
-            const result = await requstHttp.getData(endPoints.getProductos)
+            getOrdenes()
             setLoading(false)
-
-            if (result.data?.code === 200) {
-                if (!alive) return
-            }
         } catch (error) {
             console.error("Error cargando productos:", error);
             setLoading(false)
         } finally {
             if (alive) setLoading(false);
         }
-    }, [getSolicitudes])
+    }, [getOrdenes])
 
     useEffect(() => {
         let alive = true
 
 
         setSelected({
-            title: 'Solicitudes',
-            path: '/solicitudes'
+            title: 'Ordenes',
+            path: '/ordenes'
         })
 
         load(alive)
@@ -287,6 +312,9 @@ export default function Solicitudes() {
                                 density="compact"
                                 loading={loading}
                                 autosizeOnMount
+                                getRowClassName={(params) =>
+                                    params.indexRelativeToCurrentPage % 2 === 0 ? "even" : "odd"
+                                }
                                 initialState={{
                                     pagination: { paginationModel },
                                     sidebar: {
@@ -313,7 +341,7 @@ export default function Solicitudes() {
                                         noRowsVariant: 'skeleton',
                                     },
                                     toolbar: {
-                                        title: 'REGISTROS DE SOLICITUDES',
+                                        title: 'REGISTROS DE ORDENES',
                                         addButton: (
                                             <Tooltip title="Nueva Producto">
                                                 <ToolbarButton onClick={() => {
@@ -345,16 +373,20 @@ export default function Solicitudes() {
                                     },
                                     '& .classname--cell': {
                                         p: 0,
-                                    }
+                                    },
+                                    '& .MuiDataGrid-row.even': {
+                                        backgroundColor: '#ffffff',
+                                    },
+                                    '& .MuiDataGrid-row.odd': {
+                                        backgroundColor: '#e3f2fd',
+                                    },
                                 }}
                             />
                         </Box>
                         <GridChartsRendererProxy id='main' renderer={ChartsRenderer}/>
-
-                        <ViewSolicitud open={openDialog} onClose={() => {
+                        <ViewOrden open={openDialog} onClose={() => {
                             setOpenDialog(false)
-                        }} id={idSolicitud ?? 1}/>
-
+                        }} id={idOrden} />
                     </GridChartsIntegrationContextProvider>
                     : <Box sx={{ width: '100%', height: '100%' }}>
                         <Outlet />

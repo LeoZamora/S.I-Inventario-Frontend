@@ -100,7 +100,7 @@ export default function ItemComboboxCreate({ open = false, onClose, isEdit, tipo
 
     return (
         // fullScreen={fullScreen}
-        <Dialog open={open} onClose={(event, reason) => {
+        <Dialog open={open} onClose={(_, reason) => {
             if (reason === "backdropClick" || reason === 'escapeKeyDown') {
                 setShakeDialog(true);
 

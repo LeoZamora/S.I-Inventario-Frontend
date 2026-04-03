@@ -117,7 +117,7 @@ export default function UbicacionCreate({ open = false, onClose, isEdit, idUbica
     }, [isEdit, idUbicacion, reset, codigoUbicacion, usuarioRegistro]);
 
     return (
-        <Dialog open={open} onClose={(event, reason) => {
+        <Dialog open={open} onClose={(_, reason) => {
             if (reason === "backdropClick" || reason === 'escapeKeyDown') {
                 setShakeDialog(true);
 

@@ -25,7 +25,7 @@ import { ChartsRenderer, configurationOptions } from '@mui/x-charts-premium'
 import RequestGraph from '../../services/requestGraph';
 import CustomToolbar from '../../reusable/ToolbarGrid';
 import type { ProductoGQL } from '../../helpers/interfaces';
-import { useInventarioContext } from '../../context/Inventario.context';
+// import { useInventarioContext } from '../../context/Inventario.context';
 import { useAppDispatch, useAppSelector } from '../../appStore/hooks/hook';
 import { useNavigate } from 'react-router-dom';
 import { inventariosSlice } from '../../appStore/slices/slices';
@@ -60,7 +60,7 @@ export default function InventarioProductos() {
 
     const headersColumns: GridColDef[] = useMemo(() => [{
             field: 'opc',
-            // headerAlign: 'center',
+            headerAlign: 'center',
             align: 'center',
             sortable: false,
             disableExport: true,
@@ -225,7 +225,7 @@ export default function InventarioProductos() {
     const [inventarios, setInventarios] = useState<ListOption[]>([])
     const [loading, setLoading] = useState(false);
     const [precioInventario, setPrecio] = useState<number>(0)
-    const {setSelected} = useInventarioContext()
+    // const {setSelected} = useInventarioContext()
 
     const idInventarioSelected = useAppSelector(state => state.inventario.idInventario)
     const selectedOption = inventarios.find(inv => inv.id === idInventarioSelected) || null;
@@ -310,16 +310,18 @@ export default function InventarioProductos() {
         let alive = true
 
 
-        setSelected({
-            title: 'Inventario de Productos',
-            path: '/inventario/productos'
-        })
+        // setSelected({
+        //     title: 'Inventario de Productos',
+        //     path: '/inventario/productos'
+        // })
 
         load(alive)
         return () => {
             alive = false
         }
-    }, [rows.length, setSelected, load])
+
+        // setSelected
+    }, [rows.length, load])
 
     return (
         <Box style={{  width: '100%', height: '100%'}}>
@@ -411,75 +413,79 @@ export default function InventarioProductos() {
                             </Box>
                         </Box>
                         <Fade in>
-                            <DataGridPremium
-                                apiRef={apiRef}
-                                rows={rows}
-                                columns={columns}
-                                density="compact"
-                                // rowSpacingType="border"
-                                loading={loading}
-                                autosizeOnMount
-                                initialState={{
-                                    pagination: { paginationModel },
-                                    sidebar: {
-                                        open: false,
-                                        value: GridSidebarValue.Charts
-                                    },
-                                }}
-                                pageSizeOptions={[5, 10]}
-                                chartsIntegration
-                                showToolbar
-                                slots={{
-                                    toolbar: CustomToolbar,
-                                    chartsPanel: GridChartsPanel,
-                                }}
-                                experimentalFeatures={{
-                                    charts: true,
-                                }}
-                                slotProps={{
-                                    chartsPanel: {
-                                        schema: configurationOptions
-                                    },
-                                    loadingOverlay: {
-                                        variant: 'skeleton',
-                                        noRowsVariant: 'skeleton',
-                                    },
-                                    toolbar: {
-                                        title: 'INVENTARIO DE PRODUCTOS',
-                                        addButton: (
-                                            <Tooltip title="Nueva Producto">
-                                                <ToolbarButton onClick={() => {
-                                                    navigate('new')
-                                                }}>
-                                                    <AddRounded />
-                                                </ToolbarButton>
-                                            </Tooltip>
-                                        )
-                                    }
-                                }}
-                                sx={{
-                                    borderRadius: 0,
-                                    borderLeft: 0,
-                                    borderRight: 0,
+                            <Box sx={{
+                                height: 500
+                            }}>
+                                <DataGridPremium
+                                    apiRef={apiRef}
+                                    rows={rows}
+                                    columns={columns}
+                                    density="compact"
+                                    // rowSpacingType="border"
+                                    loading={loading}
+                                    autosizeOnMount
+                                    initialState={{
+                                        pagination: { paginationModel },
+                                        sidebar: {
+                                            open: false,
+                                            value: GridSidebarValue.Charts
+                                        },
+                                    }}
+                                    pageSizeOptions={[5, 10]}
+                                    chartsIntegration
+                                    showToolbar
+                                    slots={{
+                                        toolbar: CustomToolbar,
+                                        chartsPanel: GridChartsPanel,
+                                    }}
+                                    experimentalFeatures={{
+                                        charts: true,
+                                    }}
+                                    slotProps={{
+                                        chartsPanel: {
+                                            schema: configurationOptions
+                                        },
+                                        loadingOverlay: {
+                                            variant: 'skeleton',
+                                            noRowsVariant: 'skeleton',
+                                        },
+                                        toolbar: {
+                                            title: 'INVENTARIO DE PRODUCTOS',
+                                            addButton: (
+                                                <Tooltip title="Nueva Producto">
+                                                    <ToolbarButton onClick={() => {
+                                                        navigate('new')
+                                                    }}>
+                                                        <AddRounded />
+                                                    </ToolbarButton>
+                                                </Tooltip>
+                                            )
+                                        }
+                                    }}
+                                    sx={{
+                                        borderRadius: 0,
+                                        borderLeft: 0,
+                                        borderRight: 0,
 
-                                    flexGrow: 1,
-                                    width: '100%',
-                                    minHeight: "100%",
-                                    "& .MuiDataGrid-main": {
-                                        width: '100%'
-                                    },
-                                    "&::-webkit-scrollbar": {
-                                        width: "5px",
-                                        display: 'none'
-                                    },
-                                    '& .classname--header': {
-                                        p: 0,
-                                    },
-                                    '& .classname--cell': {
-                                        p: 0,
-                                    }
-                                }}
-                            />
+                                        flexGrow: 1,
+                                        width: '100%',
+                                        minHeight: "100%",
+                                        "& .MuiDataGrid-main": {
+                                            width: '100%'
+                                        },
+                                        "&::-webkit-scrollbar": {
+                                            width: "5px",
+                                            display: 'none'
+                                        },
+                                        '& .classname--header': {
+                                            p: 0,
+                                        },
+                                        '& .classname--cell': {
+                                            p: 0,
+                                        }
+                                    }}
+                                />
+                            </Box>
                         </Fade>
                         <GridChartsRendererProxy id='main' renderer={ChartsRenderer}/>
                     </GridChartsIntegrationContextProvider>
