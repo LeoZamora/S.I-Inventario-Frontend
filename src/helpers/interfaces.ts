@@ -1,3 +1,5 @@
+import type { producto } from "./types";
+
 export interface Categoria {
     // idCategoria?: number | null
     nombreCategoria: string;
@@ -36,18 +38,22 @@ export interface Ubicacion {
     bodegas?: Bodegas | null;
 }
 
+export interface TipoGeneric {
+    nombre: string;
+    descripcion?: string | null;
+    usuarioRegistro: string
+}
+
+export interface Login {
+    usuario: string;
+    password: string
+}
 
 export interface InventarioProducto {
     stockMin: number;
     stockMax: number;
     stock: number;
     estado: number | boolean
-}
-
-export interface TipoProducto {
-    nombre: string;
-    descripcion?: string | null;
-    usuarioRegistro: string
 }
 
 export interface ProductoGQL {
@@ -60,7 +66,7 @@ export interface ProductoGQL {
     estado: string;
     subCategoria: SubCategoria;
     inventarioProductos: InventarioProducto[];
-    tipoProducto: TipoProducto
+    tipoProducto: TipoGeneric
     fechaRegistro: Date;
     usuarioRegistro: string;
 }
@@ -110,4 +116,47 @@ export interface InventarioQL {
     usuarioRegistro: string;
     idBodega?: number | null;
     idDepartamento?: number | null
+}
+
+export interface DetailsSolicitud {
+    idDetalleSolicitud?: number | null
+    idSolicitud?: number | null
+    idProducto: number,
+    cantidad: number,
+    precioUnitario: number,
+    observaciones: string | null
+}
+
+export interface Solicitud {
+    codigoSolicitud: string,
+    solicitante: string,
+    observaciones: string | null,
+    motivo: string,
+    usuarioRegistro: string,
+    idBodegaSolicitante: number,
+    idBodegaSolicitada: number | null,
+    idTipoSolicitud: number,
+    detalles: DetailsSolicitud[]
+}
+
+export interface DetailsOrden {
+    idDetalleOrden: number | null
+    idOrden: number | null
+    idProducto: number,
+    cantidad: number,
+    precioUnitario: number,
+    observaciones: string | null
+    producto?: producto | null
+}
+
+export interface Orden {
+    idOrden?: number | null
+    codigoOrden: string,
+    noReferencia: string | null,
+    observaciones: string | null,
+    usuarioRegistro: string,
+    fechaEmision: string,
+    idTipoOrden: number,
+    idSolicitud: number,
+    detalleOrdens: DetailsOrden[]
 }

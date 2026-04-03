@@ -100,7 +100,7 @@ export default function CategoriaCreate({ open = false, onClose, isEdit, idCateg
 
     return (
         // fullScreen={fullScreen}
-        <Dialog open={open} onClose={(event, reason) => {
+        <Dialog open={open} onClose={(_, reason) => {
             if (reason === "backdropClick" || reason === 'escapeKeyDown') {
                 setShakeDialog(true);
 

@@ -23,42 +23,45 @@ type Props = {
     open: boolean;
     onClose: () => void;
     isEdit: boolean;
-    idTipoProducto: number | null
+    idTipoOrden: number | null,
+    onClick: (code: number, msg: string) => void
 }
 
 const requestHttp = new RequestHttp
 const requestGraph = new RequestGraph
 
-type FormProps = z.infer<typeof validationSchema.tipoProductoSchema>
+type FormProps = z.infer<typeof validationSchema.tipoSolicitudSchema>
 
-export default function TipoProductoCreate({ open = false, isEdit, onClose, idTipoProducto }: Props) {
+const usuarioRegistro = 'dba'
+
+export default function TipoOrdenCreate({ open = false, isEdit, onClose, onClick, idTipoOrden }: Props) {
     const {
         control, handleSubmit,
         reset,
         formState: { errors }
     } = useForm({
-        resolver: zodResolver(validationSchema.tipoProductoSchema),
-        defaultValues: { nombre: '', descripcion: '', usuarioRegistro: '' },
+        resolver: zodResolver(validationSchema.tipoSolicitudSchema),
+        defaultValues: { nombre: '', descripcion: '', usuarioRegistro: usuarioRegistro },
     })
+
     const [estadoTipoProducto, setEstado] = useState(false)
     const [fechaRegistro, setFecha] = useState("")
     const [shakeDialog, setShakeDialog] = useState(false)
-    const title = isEdit ? 'Editar Tipo Producto' : 'Nuevo Tipo Producto'
+    const title = isEdit ? 'Editar Tipo Órden' : 'Nuevo Tipo Órden'
 
     async function onSubmit(data: FormProps) {
         try {
             const dataForm: TipoGeneric = {
                 nombre: data.nombre,
                 descripcion: data?.descripcion,
-                usuarioRegistro: data.usuarioRegistro
+                usuarioRegistro: usuarioRegistro
             }
 
-            const result = await requestHttp.postTipoProducto(dataForm)
-            if (result?.code === 200) {
-                onClose()
-            } else {
-                console.log(result);
-            }
+            const result = await requestHttp.postTipoOrden(dataForm)
+
+            onClick(result?.code, result?.msg)
+
+            onClose()
         } catch (error) {
             console.log(error)
         }
@@ -70,25 +73,25 @@ export default function TipoProductoCreate({ open = false, isEdit, onClose, idTi
 
             try {
                 const result = await requestGraph.queryGraph(
-                    queries.GET_TIPOPROD_BY_ID,
-                    { idTipoProducto: id }
+                    queries.GET_TIPOSOLICITUD_BY_ID,
+                    { idTipoOrden: id }
                 )
 
-                const tipoProducto = result?.findTipoProductoById
+                const tipoSolicitud = result?.findTipoSolicitudById
 
-                if (tipoProducto) {
-                    if (tipoProducto.estado === 1) {
+                if (tipoSolicitud) {
+                    if (tipoSolicitud.estado === 1) {
                         setEstado(true)
                     } else {
                         setEstado(false)
                     }
 
-                    setFecha(tipoProducto.fechaRegistro)
+                    setFecha(tipoSolicitud.fechaRegistro)
 
                     reset({
-                        nombre: tipoProducto.nombre,
-                        usuarioRegistro: tipoProducto.usuarioRegistro,
-                        descripcion: tipoProducto.descripcion
+                        nombre: tipoSolicitud.nombre,
+                        usuarioRegistro: tipoSolicitud.usuarioRegistro,
+                        descripcion: tipoSolicitud.descripcion
                     })
                 }
 
@@ -98,15 +101,15 @@ export default function TipoProductoCreate({ open = false, isEdit, onClose, idTi
         }
 
         if (isEdit) {
-            getTipoProdById(idTipoProducto)
+            getTipoProdById(idTipoOrden)
         } else {
             reset({
                 nombre: '',
                 descripcion: '',
-                usuarioRegistro: ''
+                usuarioRegistro: usuarioRegistro
             })
         }
-    }, [idTipoProducto, isEdit, reset])
+    }, [idTipoOrden, isEdit, reset])
 
 
     return (
@@ -126,7 +129,7 @@ export default function TipoProductoCreate({ open = false, isEdit, onClose, idTi
             reset({
                 nombre: '',
                 descripcion: '',
-                usuarioRegistro: ''
+                usuarioRegistro: usuarioRegistro
             })
         }}
             disableRestoreFocus
@@ -212,7 +215,7 @@ export default function TipoProductoCreate({ open = false, isEdit, onClose, idTi
                                         id="nombre"
                                         type="text"
                                         size="small"
-                                        label="Nombre del tipo de producto"
+                                        label="Nombre Tipo Órden"
                                         placeholder="Ingrese el nombre"
                                         error={!!errors.nombre}
                                         // required

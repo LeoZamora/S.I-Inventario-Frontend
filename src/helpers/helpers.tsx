@@ -4,7 +4,8 @@ import {
     Inventory2Rounded,
     WarehouseRounded,
     LabelOutlined,
-    ClassOutlined
+    ClassOutlined,
+    BookmarksRounded
 } from '@mui/icons-material'
 import type React from "react"
 
@@ -32,7 +33,7 @@ export function formateDate(date: string, showTime: boolean) {
     }
 }
 
-export function formatCurrency(key: number, currency: string) {
+export function formatCurrency(key: number, currency: "NIO" | "USD") {
     return new Intl.NumberFormat('es-NI', {
         maximumFractionDigits: 4,
         style: 'currency',
@@ -109,4 +110,5 @@ export const iconMap: Record<string, React.ReactNode> = {
     proveedores: <PeopleOutlineRounded />,
     logistica: <WarehouseRounded />,
     tipoSolicitud: <ClassOutlined />,
+    tipoOrden: <BookmarksRounded />,
 }

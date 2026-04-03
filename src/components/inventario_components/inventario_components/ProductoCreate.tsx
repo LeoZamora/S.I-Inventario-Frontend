@@ -1,5 +1,5 @@
 import {
-    Container, Box, Typography, Tooltip,
+    Container, Box, Typography,
     Button, Grid, Fade, Divider,
     Autocomplete, TextField, CircularProgress,
     FormControlLabel, Paper, Skeleton, IconButton,
@@ -36,7 +36,7 @@ type CategoriasCombobox = {
 }
 
 type ListOption = {
-    id: number
+    id:  number
     label: string
     description?: string
     codigo?: string
@@ -113,7 +113,6 @@ const requestGraph = new RequestGraph
 const codigosValidos = ["EC", "ARM", "MOB", "IMP"] as const;
 type CodigoDefined = "EC" | "ARM" | "MOB" | "IMP"
 const usuarioRegistro = 'dba'
-
 
 // COMPONENTS
 
@@ -301,7 +300,6 @@ export default function ProductoCreate() {
                 idTipoImpresion: 0
             }
         }
-
     })
 
     const [categorias, setCategorias] = useState<ListOption[]>([])
@@ -318,7 +316,7 @@ export default function ProductoCreate() {
     const [imgBase64, setImg] = useState("")
 
     // ALERTA
-    const [msgAlert, setMsg] = useState("Producto creado correctamente")
+    const [msgAlert, setMsg] = useState("Registro creado correctamente")
     const [openAlert, setOpenAlert] = useState(false)
     const [severityAlert, setSeverity] = useState<"success" | "warning" | "info" | "error">("success")
 
@@ -399,7 +397,7 @@ export default function ProductoCreate() {
             revalidateOnFocus: true,
             revalidateOnReconnect: true,
             revalidateOnMount: true,
-            onSuccess: (data: GenericItem[]) => {
+            onSuccess: (data) => {
                 const items: ListOption[] = data.map((item:  GenericItem) => ({
                     label: item.nombre,
                     id: item[idKey],
@@ -424,7 +422,8 @@ export default function ProductoCreate() {
         isEdit ? [queries.GET_PRODUCTO_BY_ID, { idProducto: Number(id) }] : null,
         fetcher,
         {
-            revalidateOnFocus: false,
+            // revalidateOnFocus: false,
+            // revalidateOnMount: true,
             revalidateOnReconnect: true,
             shouldRetryOnError: false,
             onSuccess: (data: DetailsProducto) => {
@@ -560,7 +559,7 @@ export default function ProductoCreate() {
         }
 
         getData()
-    }, [id])
+    }, [])
 
     useEffect(() => {
         if (isEdit) {
@@ -574,7 +573,7 @@ export default function ProductoCreate() {
                 )
             }
         }
-    }, [categorias, getValues, isEdit, setValue, id, idProducto])
+    }, [categorias, getValues, isEdit, setValue, idProducto])
 
     return (
         <Fade in>
@@ -591,13 +590,18 @@ export default function ProductoCreate() {
 
                     <Box sx={{ flexGrow: 1 }} />
 
-                    <Tooltip title="Volver">
+                    {/* <Tooltip title="Volver">
                         <IconButton onClick={() => {
                             navigate(-1)
                         }}>
                             <ArrowBackRounded />
                         </IconButton>
-                    </Tooltip>
+                    </Tooltip> */}
+                    <IconButton onClick={() => {
+                        navigate(-1)
+                    }}>
+                        <ArrowBackRounded />
+                    </IconButton>
                 </Box>
 
                 <Box sx={{
@@ -742,7 +746,7 @@ export default function ProductoCreate() {
                                             <Controller
                                                 name="idTipoProducto"
                                                 control={control}
-                                                render={({ field}) => (
+                                                render={({ field }) => (
                                                     <Autocomplete
                                                         options={tipoProducto}
                                                         id="idTipoProducto"

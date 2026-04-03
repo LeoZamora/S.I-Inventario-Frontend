@@ -1,6 +1,9 @@
 import axios from "axios";
 import { endPoints } from "./endPoints";
-import type { Bodegas, Categoria, InventarioQL, Producto, SubCategoria, TipoProducto, Ubicacion } from "../helpers/interfaces";
+import type {
+    Bodegas, Categoria, InventarioQL, Login, Orden, Producto,
+    Solicitud, SubCategoria, TipoGeneric, Ubicacion
+} from "../helpers/interfaces";
 
 export default class RequestHttp {
     constructor() {}
@@ -132,7 +135,7 @@ export default class RequestHttp {
 
 
     // TIPOS DE PRODUCTOS
-    async postTipoProducto(data: TipoProducto) {
+    async postTipoProducto(data: TipoGeneric) {
         try {
             const result = await axios.post(endPoints.postTipoProducto, data)
             return {
@@ -244,6 +247,165 @@ export default class RequestHttp {
     }, url: string) {
         try {
             const result = await axios.post(url, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+
+    // SOLICITUDES
+    async getCodigoSolicitud() {
+        try {
+            const result = await axios.get(endPoints.getCodigoSolicitud)
+            return {
+                code: result.data,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async postSolicitud(data: Solicitud) {
+        try {
+            const result = await axios.post(endPoints.postSolicitud, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async putSolicitud(data: Solicitud, idSolicitud: number) {
+        try {
+            const result = await axios.put(`${endPoints.postSolicitud}/${idSolicitud}`, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    // TIPOS DE SOLICITUD
+    async postTipoSolicitud(data: TipoGeneric) {
+        try {
+            const result = await axios.post(endPoints.postTipoSolicitud, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    // LOGIN
+    async postLogin(data: Login) {
+        try {
+            const result = await axios.post(endPoints.postLogin, data)
+            return {
+                code: result.status,
+                msg: result.data?.token,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+
+    // ORDENES
+    async getCodigoOrdenes() {
+        try {
+            const result = await axios.get(endPoints.getCodigoOrden)
+            return {
+                code: result.data,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async postOrdenes(data: Orden) {
+        try {
+            const result = await axios.post(endPoints.postOrden, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+    async putOrdenes(data: Orden, idOrden: number) {
+        try {
+            const result = await axios.put(`${endPoints.postOrden}/${idOrden}`, data)
+            return {
+                code: result.data?.code ?? result.status,
+                msg: result.data?.msg,
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                return {
+                    code: error?.response?.status,
+                    msg: error?.response?.data.message,
+                }
+            }
+        }
+    }
+
+        async postTipoOrden(data: TipoGeneric) {
+        try {
+            const result = await axios.post(endPoints.postTipoOrden, data)
             return {
                 code: result.data?.code ?? result.status,
                 msg: result.data?.msg,

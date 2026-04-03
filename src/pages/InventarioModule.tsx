@@ -69,7 +69,6 @@ export default function InventarioLayout() {
     }
 
     useEffect(() => {
-        // Si ya tenemos datos en Redux, no hacemos nada
         if (inventariosState.length > 0) {
             return;
         }

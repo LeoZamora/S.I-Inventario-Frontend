@@ -6,12 +6,8 @@ import { persistStore, persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import { combineReducers } from '@reduxjs/toolkit'
 import {
-    FLUSH,
-    REHYDRATE,
-    PAUSE,
-    PERSIST,
-    PURGE,
-    REGISTER
+    FLUSH, REHYDRATE, PAUSE,
+    PERSIST, PURGE, REGISTER
 } from 'redux-persist/es/constants'
 
 const persistConfig = {
@@ -21,16 +17,21 @@ const persistConfig = {
 }
 
 const rootReducer = combineReducers({
-    auth: persistReducer(persistConfig, authSlice.reducer),
+    auth: authSlice.reducer,
     inventario: inventariosSlice.reducer
 })
 
+const persistedReducer = persistReducer(persistConfig, rootReducer)
+
 export const store = configureStore({
-    reducer: rootReducer,
+    reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
             serializableCheck: {
-                ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+                ignoredActions: [
+                    FLUSH, REHYDRATE, PAUSE,
+                    PERSIST, PURGE, REGISTER
+                ],
             }
         })
 })

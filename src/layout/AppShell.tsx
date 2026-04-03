@@ -1,4 +1,5 @@
-import React,{
+import {
+    useCallback,
     useEffect,
     useMemo,
     useRef,
@@ -18,10 +19,13 @@ import {
     type optionNavigation,
     type optionSelected,
 } from "../context/Inventario.context";
-import { inventarioModuleConfig, solicitudesModuleConfig } from "../config/miDraweConfig";
+import { inventarioModuleConfig, ordenesModuleConfig, solicitudesModuleConfig } from "../config/miDraweConfig";
 import { useAppDispatch, useAppSelector } from "../appStore/hooks/hook";
 import type { MenuItem } from '../helpers/types'
 import { inventariosSlice } from '../appStore/slices/slices';
+import type { JwtPayload } from 'jwt-decode'
+import VerifySession from '../reusable/VerifySession';
+import JWTDecoder from "../helpers/jwtDecoder";
 
 type Props = {
     drawerWidth?: number;
@@ -33,8 +37,10 @@ export default function AppShell({drawerWidth = 230}: Props) {
     const dispatch = useAppDispatch()
     const subModulesStore: MenuItem[] = useAppSelector(state => state.inventario.subModulesDrawer)
     const { setSubMudulesDrawer } = inventariosSlice.actions
+    const token = useAppSelector(state => state.auth.token)
 
-    const [open, setOpen] = React.useState(true)
+    const [open, setOpen] = useState(true)
+    const [openVerify, setOpenVerify] = useState(false)
     const [opcNavigation, setOpcNavigation] = useState<optionNavigation | null>(null)
     const [selected, setSelected] = useState<optionSelected | null>(null)
     const [modulesMiniDrawer, setModules] = useState<MenuItem[]>([])
@@ -42,19 +48,58 @@ export default function AppShell({drawerWidth = 230}: Props) {
 
     const { subModuleInventario, inventarios } = inventarioModuleConfig()
     const { subModulosSolicitud } = solicitudesModuleConfig()
+    const { subModulosOrdenes } = ordenesModuleConfig()
 
 
     const value = useMemo(() => ({ selected, setSelected }), [selected])
     const valueNavigation = useMemo(() => ({ opcNavigation, setOpcNavigation}), [opcNavigation])
 
-    const showMiniDrawer = location.pathname.includes('/inventario') || location.pathname.includes('/solicitudes')
+    const showMiniDrawer =
+        location.pathname.includes('/inventario') ||
+        location.pathname.includes('/solicitudes') ||
+        location.pathname.includes('/ordenes')
+
+    const verifySession = useCallback(async () => {
+        const decodeToken: JwtPayload | null = new JWTDecoder(token).decodeToken()
+        const now =  Date.now()
+
+        if (!decodeToken) return
+        const expiryInMs = Number(decodeToken.exp) * 1000;
+
+        if (now >= expiryInMs) {
+            setTimeout(() => {
+                setOpenVerify(true)
+            }, 0)
+        }
+    }, [token])
 
     useEffect(() => {
         if (location.pathname === '/') {
             navigate('/home', { replace: true })
         }
 
-    }, [location.pathname, navigate])
+    }, [location.pathname, navigate, token])
+
+    useEffect(() => {
+        verifySession()
+
+        // FUNCION PARA VERIFICAR USUARIO EN LA PESTAÑA ACTUAL
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                verifySession()
+            }
+        }
+
+        // VERIFICAR EL VOLVER A ENTRAR
+        window.addEventListener("focus", verifySession)
+        document.addEventListener("visibilitychange", handleVisibilityChange)
+
+
+        return () => {
+            window.removeEventListener('focus', verifySession);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [verifySession])
 
     const layoutRef = useRef<HTMLDivElement>(null)
 
@@ -91,6 +136,11 @@ export default function AppShell({drawerWidth = 230}: Props) {
                                 case "sol":
                                     dispatch(setSubMudulesDrawer(subModulosSolicitud))
                                     setSubModules(subModulosSolicitud)
+                                    setModules([])
+                                    break;
+                                case "ord":
+                                    dispatch(setSubMudulesDrawer(subModulosOrdenes))
+                                    setSubModules(subModulosOrdenes)
                                     setModules([])
                                     break;
                                 default:
@@ -155,6 +205,10 @@ export default function AppShell({drawerWidth = 230}: Props) {
                         onClose={() => setOpen(false)}
                     />
                 </Box>
+
+                <VerifySession open={openVerify} onClose={() => {
+                    setOpenVerify(false)
+                }}/>
             </InventarioContext.Provider>
         </NavigationContext.Provider>
     );

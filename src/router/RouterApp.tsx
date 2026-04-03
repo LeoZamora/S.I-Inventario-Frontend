@@ -1,26 +1,89 @@
 import { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import HomePage from "../modules/HomePage";
-import Categorias from "../components/inventario_components/Categorias";
-import Inventarios from "../components/inventario_components/Inventarios";
-import AppShell from "../layout/AppShell";
-import InventarioLayout from "../modules/InventarioModule";
-import TiposProductos from "../components/inventario_components/TipoProducto";
-import Proveedores from "../components/inventario_components/Proveedores";
-import InventarioArmas from "../components/inventario_components/InventarioArmas";
-import InventarioProductos from "../components/inventario_components/InventarioProductos";
-// import UnderConstruction from "../reusable/BuildComp";
-import BodegasUbicaciones from "../components/inventario_components/Logistica";
-import DetailsCategory from "../components/inventario_components/categorias_components/CategoriaDetails";
-import DetailsUbicacion from "../components/inventario_components/bodegas_components/LogisticaDetails";
-import ProductoCreate from "../components/inventario_components/inventario_components/ProductoCreate";
-import Solicitudes from "../components/movimientos_inventario/Solicitudes";
-import CreateSolicitud from "../components/movimientos_inventario/solicitudes_components/CreateSolicitud";
+import ProtectedRoute from "./ProtectedRoute";
+import { lazy } from "react";
+// import { KeepAlive } from "react-activation";
+import LoadingOverlay from "../reusable/LoaderOverlay";
+import TiposOrdenes from "../components/movimientos_inventario/TipoOrden";
+
+// Lazy load de componentes
+
+const AppShell = lazy(() => import('../layout/AppShell'));
+const HomePage = lazy(() => import('../pages/HomePage'));
+const InventarioLayout = lazy(() => import('../pages/InventarioModule'));
+const Categorias = lazy(() => import('../components/inventario_components/Categorias'));
+const Inventarios = lazy(() => import('../components/inventario_components/Inventarios'));
+const TiposProductos = lazy(() => import('../components/inventario_components/TipoProducto'));
+const Proveedores = lazy(() => import('../components/inventario_components/Proveedores'));
+const InventarioArmas = lazy(() => import('../components/inventario_components/InventarioArmas'));
+const BodegasUbicaciones = lazy(() => import('../components/inventario_components/Logistica'));
+const DetailsCategory = lazy(() => import('../components/inventario_components/categorias_components/CategoriaDetails'));
+const DetailsUbicacion = lazy(() => import('../components/inventario_components/bodegas_components/LogisticaDetails'));
+const ProductoCreate = lazy(() => import('../components/inventario_components/inventario_components/ProductoCreate'));
+const Solicitudes = lazy(() => import('../components/movimientos_inventario/Solicitudes'));
+const CreateSolicitud = lazy(() => import('../components/movimientos_inventario/solicitudes_components/CreateSolicitud'));
+const TiposSolicitudes = lazy(() => import('../components/movimientos_inventario/TipoSolicitud'));
+const Ordenes = lazy(() => import('../components/movimientos_inventario/Ordenes'));
+const CreateOrden = lazy(() => import('../components/movimientos_inventario/ordenes_conponents/CreateOrden'));
+const LoginApp = lazy(() => import('../pages/LoginApp'));
+const InventarioProductos = lazy(() => import('../components/inventario_components/InventarioProductos'));
+
+
+// function ProductoCreateWrapper() {
+//     const { id } = useParams();
+
+//     return (
+//         <KeepAlive
+//             id={id ? `edit-${id}` : 'form-crear'}
+//             name="ProductoForm"
+//             saveScrollPosition
+//             autoFreeze={true} 
+//         >
+//             <Suspense fallback={<LoadingOverlay isLoading={true}/>}>
+//                 <ProductoCreate key={id} id={Number(id)} />
+//             </Suspense>
+//         </KeepAlive>
+//     );
+// }
+
+// function SolicitudCreateWrapper() {
+//     const { id } = useParams();
+
+//     return (
+//         <KeepAlive
+//             id={id ? `edit-${id}` : 'form-crear'}
+//             name="SolicitudForm"
+//             saveScrollPosition
+//             autoFreeze={true} 
+//         >
+//             <Suspense fallback={<LoadingOverlay isLoading={true}/>}>
+//                 <CreateSolicitud key={id} id={Number(id)} />
+//             </Suspense>
+//         </KeepAlive>
+//     );
+// }
+
+// function OrdenesCreateWrapper() {
+//     const { id } = useParams();
+
+//     return (
+//         <KeepAlive
+//             id={id ? `edit-${id}` : 'form-crear'}
+//             name="OrdenForm"
+//             saveScrollPosition
+//             autoFreeze={true} 
+//         >
+//             <Suspense fallback={<LoadingOverlay isLoading={true}/>}>
+//                 <CreateOrden key={id} id={Number(id)} />
+//             </Suspense>
+//         </KeepAlive>
+//     );
+// }
 
 const routes = [
     {
         path: 'inventario',
-        component: <InventarioLayout />,
+        element: <InventarioLayout />,
         pathnameBase: 'Inventory',
         indexRedirectTo: "productos",
         children: [
@@ -74,7 +137,7 @@ const routes = [
     },
     {
         path: 'solicitudes',
-        component: <Solicitudes />,
+        element: <Solicitudes />,
         pathnameBase: 'Solicitudes',
         children: [
             {
@@ -82,50 +145,70 @@ const routes = [
                 element: <CreateSolicitud />,
                 children: []
             },
+            {
+                path: 'tipo-solicitud',
+                element: <TiposSolicitudes />,
+                children: []
+            },
         ]
     },
-    // {
-    //     path: 'ordenes',
-    //     component: <Solicitudes />,
-    //     pathnameBase: 'Ordenes',
-    //     children: []
-    // },
+    {
+        path: 'ordenes',
+        element: <Ordenes />,
+        pathnameBase: 'Ordenes',
+        children: [
+            {
+                path: ':id?',
+                element: <CreateOrden />,
+                children: []
+            },
+            {
+                path: 'tipo-orden',
+                element: <TiposOrdenes />,
+                children: []
+            },
+        ]
+    },
 ]
 
 export default function RouterApp() {
 
     return (
-        <Suspense fallback={<div>Cargando...</div>}>
+        <Suspense fallback={<LoadingOverlay isLoading={true}/>}>
             <Routes>
-                <Route path="/" element={<AppShell/>}>
-                    <Route path="/home" element={<HomePage/>} />
+                <Route path="/login" element={<LoginApp />} />
 
-                    {routes.map((route) => (
-                        <Route
-                            key={route.path}
-                            path={route.path }
-                            element={route.component}
-                        >
-                            {route.indexRedirectTo && (
-                                // <Route element={route.indexRedirectTo} />
-                                <Route
-                                    element={<Navigate to={route.indexRedirectTo} replace />}
-                                />
-                            )}
+                <Route element={ <ProtectedRoute /> }>
+                    <Route path="/" element={<AppShell/>}>
+                        <Route path="/home" element={<HomePage/>} />
 
-                            {route.children?.map((child) => (
-                                <Route key={`${route.path}/${child.path}`} path={child.path}
-                                    element={child.element}>
-                                    {child.children?.map((subChild) => (
-                                        <Route key={`${route.path}/${subChild.path}`} path={subChild.path}
-                                            element={subChild.element}
-                                        />
-                                    ))}
-                                </Route>
-                            ))}
-                        </Route>
-                    ))}
+                        {routes.map((route) => (
+                            <Route
+                                key={route.path}
+                                path={route.path }
+                                element={route.element}
+                            >
+                                {route.indexRedirectTo && (
+                                    <Route
+                                        element={<Navigate to={route.indexRedirectTo} replace />}
+                                    />
+                                )}
+
+                                {route.children?.map((child) => (
+                                    <Route key={`${route.path}/${child.path}`} path={child.path}
+                                        element={child.element}>
+                                        {child.children?.map((subChild) => (
+                                            <Route key={`${route.path}/${subChild.path}`} path={subChild.path}
+                                                element={subChild.element}
+                                            />
+                                        ))}
+                                    </Route>
+                                ))}
+                            </Route>
+                        ))}
+                    </Route>
                 </Route>
+
                 <Route path="*" element={<div>NO FOUND <strong>404</strong></div>} />
             </Routes>
         </Suspense>

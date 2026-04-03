@@ -41,6 +41,19 @@ export const endPoints = {
     getTipoCalibre: 'armas/tipoCalibre',
     getTipoArma: 'armas/tipoArma',
     getSistemaDisparo: 'armas/sistemaDisparo',
+
+    // SOLICITUDES
+    getCodigoSolicitud: 'solicitudes/codigo-recomendado',
+    postSolicitud: 'solicitudes',
+    postTipoSolicitud: 'solicitudes/tipo-solicitud',
+
+    // ORDENES
+    getCodigoOrden: 'ordenes/codigo-recomendado',
+    postOrden: 'ordenes',
+    postTipoOrden: 'ordenes/tipo-orden',
+
+    // LOGIN
+    postLogin: '/usuarios/login'
 }
 
 export const queries = {
@@ -276,6 +289,7 @@ export const queries = {
                 idUbicacion
                 codigoUbicacion
                 nombreUbicacion
+                direccion
             }
         }
     `,
@@ -520,5 +534,190 @@ export const queries = {
                 }
             }
         }
-    `
+    `,
+    GET_SOLICITUDES_COMBOBOX: `
+        query GetSolicitudesByEstado($idEstado: Int!) {
+            findSolicitudByState(idEstado: $idEstado) {
+                idSolicitud
+                codigoSolicitud
+                solicitante
+                estadoSolicitud {
+                    estados {
+                        nombreEstado
+                    }
+                }
+                orden {
+                    idOrden
+                    codigoOrden
+                }
+            }
+        }
+    `,
+    GET_SOLICITUDES_BY_ID: `
+        query GetSolicitudById($idSolicitud: Int!) {
+            findSolicitudById(idSolicitud: $idSolicitud) {
+                idSolicitud
+                codigoSolicitud
+                solicitante
+                observaciones
+                motivo
+                fechaRegistro
+                usuarioRegistro
+                idBodegaSolicitada
+                idBodegaSolicitante
+                idTipoSolicitud
+                estadoSolicitud {
+                    estados {
+                        nombreEstado
+                    }
+                }
+                bodegaSolicitante {
+                    idBodega
+                    codigoBodega
+                    nombreBodega
+                    descripcion
+                    ubicacion {
+                        idUbicacion
+                        codigoUbicacion
+                        nombreUbicacion
+                    }
+                }
+                bodegaSolicitada {
+                    idBodega
+                    codigoBodega
+                    nombreBodega
+                    descripcion
+                    ubicacion {
+                        idUbicacion
+                        codigoUbicacion
+                        nombreUbicacion
+                    }
+                }
+                detalleSolicitud {
+                    idDetalleSolicitud
+                    observaciones
+                    cantidad
+                    precioUnitario
+                    idSolicitud
+                    idProducto
+                    producto {
+                        codigoProducto
+                        nombreProducto
+                    }
+                }
+            }
+        }
+    `,
+    GET_TIPO_SOLICITUD_COMBOBOX: `
+        query {
+            findTipoSolicitud {
+                idTipoSolicitud
+                nombre
+                descripcion
+                estado
+                fechaRegistro
+            }
+        }
+    `,
+    GET_TIPOSOLICITUD_BY_ID: `
+        query GetTipoSol($idTipoSolicitud: Int!) {
+            findTipoSolicitudById(idTipoSolicitud: $idTipoSolicitud) {
+                idTipoSolicitud
+                nombre
+                descripcion
+                fechaRegistro
+            }
+        }
+    `,
+
+
+    // ORDENES
+    GET_ORDENES: `
+        query {
+            findAllOrdenes {
+                idOrden
+                codigoOrden
+                noReferencia
+                observaciones
+                idSolicitud
+                idTipoOrden
+                fechaEmision
+                usuarioRegistro
+                fechaRegistro
+                tipoOrden {
+                    idTipoOrden
+                    nombre
+                }
+                solicitudes {
+                    codigoSolicitud
+                }
+                estadoOrden {
+                    estados {
+                        idEstado
+                        codigoEstado
+                        nombreEstado
+                    }
+                }
+            }
+        }
+    `,
+    GET_ORDEN_BY_ID: `
+        query GetOrdenById($idOrden: Int!) {
+            findOrdenById(idOrden: $idOrden) {
+                idOrden
+                codigoOrden
+                noReferencia
+                observaciones
+                idSolicitud
+                idTipoOrden
+                fechaEmision
+                usuarioRegistro
+                fechaRegistro
+                tipoOrden {
+                    idTipoOrden
+                    nombre
+                }
+                detalleOrdens {
+                    idDetalleOrden
+                    observaciones
+                    cantidad
+                    precioUnitario
+                    idOrden
+                    idProducto
+                    producto {
+                        codigoProducto
+                        nombreProducto
+                    }
+                }
+                estadoOrden {
+                    estados {
+                        idEstado
+                        codigoEstado
+                        nombreEstado
+                    }
+                }
+                solicitudes {
+                    codigoSolicitud
+                    solicitante
+                    estadoSolicitud {
+                        estados {
+                            nombreEstado
+                        }
+                    }
+                }
+            }
+        }
+    `,
+    GET_TIPO_ORDEN_COMBOBOX: `
+        query {
+            findAllTipoOrdenes {
+                idTipoOrden
+                nombre
+                estado
+                descripcion
+                fechaRegistro
+                usuarioRegistro
+            }
+        }
+    `,
 }

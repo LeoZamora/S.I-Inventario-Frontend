@@ -25,22 +25,20 @@ import NumberField from "../../../reusable/NumberField";
 import { NumericFormat } from "react-number-format";
 import { DataGridPremium, useGridApiRef, type GridCellParams, type GridColDef } from '@mui/x-data-grid-premium';
 import { formatCurrency } from "../../../helpers/helpers";
-import type { DetailsSolicitud, ProductoGQL } from "../../../helpers/interfaces";
+import type { DetailsOrden, Orden, ProductoGQL } from "../../../helpers/interfaces";
 import AlertComp from "../../../reusable/AlertComp";
-import type { Solicitud } from "../../../helpers/interfaces";
-import LoadingOverlay from '../../../reusable/LoaderOverlay';
 import { Delete } from '@mui/icons-material';
-import type { SolicitudByID } from "../../../helpers/types";
+import type { estadoSolicitud, SolicitudByID } from "../../../helpers/types";
 
 const requestHttp = new RequestHttp
 const requestGraph = new RequestGraph
 const usuarioRegistro = 'dba'
 const schema = z.object({
-    solicitud: validationSchema.solicitudesSchema,
+    orden: validationSchema.ordenesSchema,
     details: validationSchema.detailsProductSchema
 })
 
-type TipoSolicitud = {
+type TipoOrden = {
     nombre: string
     descripcion: string
     fechaRegistro: string
@@ -48,8 +46,8 @@ type TipoSolicitud = {
 }
 
 type ItemTable = {
-    idDetalleSolicitud?: number | null
-    idSolicitud?: number | null
+    idDetalleOrden?: number | null
+    idOrden?: number | null
     codigoProducto: string
     nombreProducto: string
     precioUnitario: number
@@ -59,10 +57,15 @@ type ItemTable = {
     total: number
 }
 
-type InventarioCombobox = {
-    idInventario: number
-    nombreInventario: string
-    codigoInventario: string
+type SolicitudCombobox = {
+    idSolicitud: number
+    codigoSolicitud: string
+    solicitante: string
+    estadoSolicitud: estadoSolicitud[]
+    orden: {
+        idOrden: number
+        codigoOrden: string
+    }[]
 }
 
 type ListOption = {
@@ -72,8 +75,14 @@ type ListOption = {
     codigo: string | null
 }
 
+type InventarioCombobox = {
+    idInventario: number
+    nombreInventario: string
+    codigoInventario: string
+}
 
-export default function CreateSolicitud() {
+
+export default function CreateOrden() {
     const navigate = useNavigate()
 
     // TABLE
@@ -81,12 +90,10 @@ export default function CreateSolicitud() {
     const [rows, setRows] = useState<ItemTable[]>([]);
 
     // FORM
-    const [tipoSolicitud, setTipoSolicitud] = useState<ListOption[]>([])
-    const [bodegas, setBodegas] = useState<ListOption[]>([])
+    const [tipoOrden, setTipoOrden] = useState<ListOption[]>([])
     const [productos, setProductosInv] = useState<ProductoGQL[]>()
     const [productosList, setProductos] = useState<ListOption[]>()
-    const [bodegasSolicitadas, setBodegasSolicitadas] = useState<ListOption[]>([])
-    const [ubicaciones, seUbicaciones] = useState<ListOption[]>([])
+    const [solicitudes, setSolicitudes] = useState<ListOption[]>([])
     const [inventarios, setInventarios] = useState<ListOption[]>([])
 
     // ALERT
@@ -96,8 +103,8 @@ export default function CreateSolicitud() {
 
     const [loading, setLoading] = useState(false);
     const { id } = useParams()
-    const idSolicitud = Number(id)
-    const isEdit = idSolicitud >= 0 ? true : false
+    const idOrden = Number(id)
+    const isEdit = idOrden >= 0 ? true : false
     const {
         control, reset,
         setValue, getValues,
@@ -106,17 +113,14 @@ export default function CreateSolicitud() {
         resolver: zodResolver(schema),
         mode: "onChange",
         defaultValues: {
-            solicitud: {
-                codigoSolicitud: "",
-                solicitante: "",
+            orden: {
+                codigoOrden: "",
                 observaciones: "",
-                motivo: "",
                 usuarioRegistro: usuarioRegistro,
-                idBodegaSolicitada: 0,
-                idBodegaSolicitante: 0,
-                idTipoSolicitud: 0,
-                idUbicacionSolicitada: 0,
-                idUbicacionSolicitante: 0,
+                noReferencia: "",
+                idSolicitud: 0,
+                idTipoOrden: 0,
+                fechaEmision: "",
             },
             details: {
                 idProducto: 0,
@@ -146,21 +150,17 @@ export default function CreateSolicitud() {
         }, 2500)
     }
 
-    const fetcherTipoProducto = async (query: string) => {
+    const fetcherTipoOrden = async (query: string) => {
         const tiposSolicitud = await requestGraph.queryGraph(query)
-        return tiposSolicitud?.findTipoSolicitud
+        return tiposSolicitud?.findAllTipoOrdenes
     }
 
-    const fetcherItem = async (query: string) => {
-        const datos = await requestGraph.queryGraph(query)
+    const fetcherItem = async ([query, variables]: [string, number]) => {
+        const datos = await requestGraph.queryGraph(query, variables)
         return datos
     }
 
-    const fetcher = async ([query, variables]: [string, number]) => {
-        const result = await requestGraph.queryGraph(query, variables)
-        return result?.findSolicitudById ?? null;
-    }
-
+    // FUNCION PARA ELIMINAR UN PRODUCTO DE LA TABLA
     const deleteItem = useMemo(() => (id: number) => {
         const rowEdit = rows.filter(row => row.idProducto !== id)
         setRows([])
@@ -174,10 +174,11 @@ export default function CreateSolicitud() {
             headerAlign: 'center',
             sortable: false,
             disableExport: false,
-            resizable: false,
+            resizable: true,
             headerName: '',
-            headerClassName: 'classname--header',
+            headerClassName: 'classname--headerOpc',
             cellClassName: 'classname--cell',
+            flex: 0.5,
             renderCell: (params) => {
                 return (
                     <Box>
@@ -196,11 +197,11 @@ export default function CreateSolicitud() {
             headerAlign: 'center',
             sortable: false,
             disableExport: true,
-            resizable: false,
+            resizable: true,
             headerName: 'Código de Producto',
             headerClassName: 'classname--header',
             cellClassName: 'classname--cell',
-            flex: 1
+            // flex: 1
         },
         {
             field: 'nombreProducto',
@@ -208,11 +209,11 @@ export default function CreateSolicitud() {
             headerAlign: 'center',
             sortable: false,
             disableExport: true,
-            resizable: false,
+            resizable: true,
             headerName: 'Producto',
             headerClassName: 'classname--header',
             cellClassName: 'classname--cell',
-            flex: 1
+            // flex: 1
         },
         {
             field: 'precioUnitario',
@@ -220,11 +221,11 @@ export default function CreateSolicitud() {
             headerAlign: 'center',
             sortable: false,
             disableExport: true,
-            resizable: false,
+            resizable: true,
             headerName: 'Precio Unitario',
             headerClassName: 'classname--header',
             cellClassName: 'classname--cell',
-            flex: 1,
+            // flex: 1,
             renderCell: (params: GridCellParams) => {
                 return (
                     <span>
@@ -240,24 +241,24 @@ export default function CreateSolicitud() {
             sortable: false,
             editable: true,
             disableExport: true,
-            resizable: false,
+            resizable: true,
             headerName: 'Cantidad',
             headerClassName: 'classname--header',
             cellClassName: 'classname--cell',
-            flex: 1,
+            // flex: 1
         },
         {
             field: 'total',
             align: 'center',
             headerAlign: 'center',
             sortable: false,
-            editable: false,
+            editable: true,
             disableExport: true,
-            resizable: false,
+            resizable: true,
             headerName: 'Total',
             headerClassName: 'classname--header',
             cellClassName: 'classname--cell',
-            flex: 1,
+            // flex: 1,
             renderCell: (params: GridCellParams) => {
                 return (
                     <span>
@@ -272,12 +273,12 @@ export default function CreateSolicitud() {
             headerAlign: 'center',
             sortable: false,
             disableExport: true,
-            resizable: false,
+            resizable: true,
             headerName: 'Observaciones',
             editable: true,
             headerClassName: 'classname--header',
             cellClassName: 'classname--cell',
-            flex: 1
+            // flex: 1
         }
     ], [deleteItem])
 
@@ -319,44 +320,39 @@ export default function CreateSolicitud() {
     }, [])
 
 
-    // GUARDAR O EDITAR SOLICITUDES
+    // SUBMIT DE GUARDAR Y EDITAR
     async function onSubmit() {
-        setValue("solicitud.usuarioRegistro", usuarioRegistro)
-        const isValid = await trigger("solicitud")
-        const solicitud = getValues("solicitud")
+        setValue("orden.usuarioRegistro", usuarioRegistro)
+        const isValid = await trigger("orden")
+        const orden = getValues("orden")
 
         if (isValid) {
-            const details: DetailsSolicitud[] = rows.map((item: ItemTable) => {
-                const detail = {
+            const details: DetailsOrden[] = rows.map((item: ItemTable) => {
+                return {
+                    idDetalleOrden: item.idDetalleOrden ?? null,
+                    idOrden: item.idOrden ?? null,
                     idProducto: item.idProducto,
                     cantidad: item.cantidad,
                     observaciones: item.observaciones,
                     precioUnitario: item.precioUnitario,
                 }
-                const detailSend: DetailsSolicitud = isEdit ? {
-                    ...detail,
-                    idDetalleSolicitud: item.idDetalleSolicitud,
-                    idSolicitud: item.idSolicitud
-                } : detail
-                return detailSend
             })
-            const solicitudForm: Solicitud = {
-                codigoSolicitud: solicitud.codigoSolicitud,
-                solicitante: solicitud.solicitante,
-                observaciones: solicitud.observaciones ?? null,
-                motivo: solicitud.motivo,
+            const ordenForm: Orden = {
+                codigoOrden: orden.codigoOrden,
+                noReferencia: orden.noReferencia ?? null,
+                observaciones: orden.observaciones ?? null,
+                idSolicitud: orden.idSolicitud,
+                idTipoOrden: orden.idTipoOrden,
+                fechaEmision: orden.fechaEmision,
                 usuarioRegistro:  usuarioRegistro,
-                idBodegaSolicitada: solicitud.idBodegaSolicitada ?? null,
-                idBodegaSolicitante: solicitud.idBodegaSolicitante,
-                idTipoSolicitud: solicitud.idTipoSolicitud,
-                detalles: details
+                detalleOrdens: details
             }
 
             let result;
             if (isEdit) {
-                result = await requestHttp.putSolicitud(solicitudForm, idSolicitud)
+                result = await requestHttp.putOrdenes(ordenForm, idOrden)
             } else {
-                result = await requestHttp.postSolicitud(solicitudForm)
+                result = await requestHttp.postOrdenes(ordenForm)
             }
 
             handleCreateItem(result?.code, result?.msg)
@@ -368,6 +364,7 @@ export default function CreateSolicitud() {
         }
     }
 
+    // FUNCION PARA AGREGAR PRODUCTOS A LA TABLA
     async function addProducto() {
         const isValid = await trigger("details")
         const details = getValues("details")
@@ -377,10 +374,11 @@ export default function CreateSolicitud() {
 
             if (prod) {
                 const existElement = rows.filter(item => item.idProducto === details.idProducto)
-                if (existElement.length > 0) {
+                if (existElement) {
                     const mapedRows: ItemTable[] = rows.map(item => {
                         if (item.idProducto === details.idProducto) {
                             item.cantidad += details.cantidad
+                            item.total = details.precioUnitario * item.cantidad
                         }
 
                         return item
@@ -417,6 +415,119 @@ export default function CreateSolicitud() {
         }
     }
 
+    // FETCHER PARA COMBOBOX
+    const useCatalog = (
+        query: string,
+        idKey: string,
+        setState: (data: ListOption[]) => void
+    ) => {
+        useSWR(query, fetcherTipoOrden, {
+            revalidateOnFocus: false,
+            revalidateOnReconnect: true,
+            shouldRetryOnError: false,
+            onSuccess: (data) => {
+                const listItem: ListOption[] = data.map((item: TipoOrden) => ({
+                    id: item[idKey],
+                    label: `${item.nombre}`,
+                    description: item.descripcion ?? null,
+                }))
+                setState(listItem)
+            }
+        })
+    }
+    useCatalog(queries.GET_TIPO_ORDEN_COMBOBOX, "idTipoOrden", setTipoOrden)
+
+    // COMBOBOX DE SOLICITUDES Y INVENTARIOS
+    useSWR(
+        [queries.GET_INVENTARIO_COMBOBOX],
+        fetcherItem,
+        {
+            revalidateOnFocus: false,
+            revalidateOnReconnect: true,
+            shouldRetryOnError: false,
+            onSuccess: (data) => {
+                const foundInventarios = data?.findInventarios
+                setInventarios(foundInventarios.map((item: InventarioCombobox) => {
+                    return {
+                        label: `${item.codigoInventario} - ${item.nombreInventario}`,
+                        id: Number(item.idInventario),
+                    }
+                }))
+            }
+        }
+    )
+    useSWR(
+        [queries.GET_SOLICITUDES_COMBOBOX, { idEstado: Number(14) }],
+        fetcherItem,
+        {
+            revalidateOnFocus: false,
+            revalidateOnReconnect: true,
+            shouldRetryOnError: false,
+            onSuccess: (data) => {
+                const foundSolicitudes = data?.findSolicitudByState || [];
+
+                const filtradas = foundSolicitudes.filter((item: SolicitudCombobox) =>
+                    item.orden.length === 0
+                );
+
+                const solicitudes = isEdit ? foundSolicitudes : filtradas;
+
+                const formateadas = solicitudes.map((item: SolicitudCombobox) => {
+                    const estado = item.estadoSolicitud.slice(-1)[0]?.estados?.nombreEstado || "Sin Estado";
+                    return {
+                        label: `${item.codigoSolicitud} - ${item.solicitante} (${estado})`,
+                        id: Number(item.idSolicitud),
+                    };
+                });
+
+                setSolicitudes(formateadas);
+            }
+        }
+    )
+
+    // GET ORDEN BY ID
+    useSWR(
+        isEdit ? [queries.GET_ORDEN_BY_ID, { idOrden: Number(idOrden) }] : null,
+        fetcherItem,
+        {
+            revalidateOnFocus: false,
+            revalidateOnReconnect: true,
+            shouldRetryOnError: false,
+            onSuccess: (data) => {
+                const orden: Orden = data?.findOrdenById || {};
+
+                reset({
+                    orden:{
+                        codigoOrden: orden.codigoOrden,
+                        noReferencia: orden.noReferencia,
+                        observaciones: orden.observaciones,
+                        idSolicitud: orden.idSolicitud,
+                        idTipoOrden: orden.idTipoOrden,
+                        fechaEmision: orden.fechaEmision.slice(0, 16),
+                        usuarioRegistro: orden.usuarioRegistro,
+                    }
+                })
+
+                const rows: ItemTable[] = orden.detalleOrdens.map((item, i: number) => {
+                    return {
+                        id: i,
+                        codigoProducto: String(item?.producto?.codigoProducto),
+                        nombreProducto: String(item?.producto?.nombreProducto),
+                        precioUnitario: item.precioUnitario,
+                        idProducto: item.idProducto,
+                        idOrden: item.idOrden,
+                        idDetalleOrden: item.idDetalleOrden,
+                        cantidad: item.cantidad,
+                        total: Number(item.precioUnitario * item.cantidad),
+                        observaciones: item.observaciones ?? null,
+                    }
+                })
+
+                setRows(rows)
+            }
+        }
+    )
+
     // PROCESOS PARA ACTUALIZAR DESDE LA TABLA
     const processRowUpdate = (newRow: ItemTable) => {
         const updatedRow = {
@@ -432,186 +543,47 @@ export default function CreateSolicitud() {
         return updatedRow;
     };
 
-    // FETCHER PARA COMBOBOX
-    const useCatalog = (
-        query: string,
-        idKey: string,
-        setState: (data: ListOption[]) => void
-    ) => {
-        useSWR(query, fetcherTipoProducto, {
-            revalidateOnFocus: false,
-            revalidateOnReconnect: true,
-            shouldRetryOnError: false,
-            onSuccess: (data) => {
-                const listItem: ListOption[] = data.map((item: TipoSolicitud) => ({
-                    id: item[idKey],
-                    label: `${item.nombre} - ${item.descripcion}`,
-                }))
-                setState(listItem)
-            }
-        })
-    }
-
-    useCatalog(queries.GET_TIPO_SOLICITUD_COMBOBOX, "idTipoSolicitud", setTipoSolicitud)
-
-    useSWR(
-        queries.GET_UBICACIONES_COMBOBOX,
-        fetcherItem,
-        {
-            revalidateOnFocus: false,
-            revalidateOnReconnect: true,
-            shouldRetryOnError: false,
-            onSuccess: (data) => {
-                const list = data?.findAllUbicaciones ?? []
-                const listItem: ListOption[] = list.map((item: {
-                idUbicacion: number,
-                nombreUbicacion: string,
-                codigoUbicacion: string,
-                direccion: string | null
-            }) => ({
-                    id: item.idUbicacion,
-                    label: `${item.codigoUbicacion} - ${item.nombreUbicacion}`,
-                    description: item.direccion
-                }))
-                seUbicaciones(listItem)
-            }
-        }
-    )
-
-
     // GET SOLICITUD BY ID
-    const { isLoading } = useSWR(
-        isEdit? [queries.GET_SOLICITUDES_BY_ID, { idSolicitud: Number(id) }] : null,
-        fetcher,
-        {
-            revalidateOnFocus: false,
-            revalidateOnReconnect: true,
-            shouldRetryOnError: false,
-            onSuccess: async (data: SolicitudByID) => {
-                await Promise.all([
-                    getBodegas(data.idBodegaSolicitante, "solicitante"),
-                    getBodegas(data.idBodegaSolicitada, "solicitada")
-                ])
+    async function getSolicitudById(id: number) {
+        setLoading(true)
+        const result = await requestGraph.queryGraph(queries.GET_SOLICITUDES_BY_ID, {
+            idSolicitud: id
+        })
+        setLoading(false)
 
-                reset({
-                    solicitud: {
-                        // idSolicitud: data.idSolicitud,
-                        codigoSolicitud: data.codigoSolicitud,
-                        solicitante: data.solicitante,
-                        idTipoSolicitud: data.idTipoSolicitud,
-                        idBodegaSolicitada: data.idBodegaSolicitada ?? 0,
-                        idBodegaSolicitante: data.idBodegaSolicitante,
-                        idUbicacionSolicitada: data.bodegaSolicitada.ubicacion.idUbicacion,
-                        idUbicacionSolicitante: data.bodegaSolicitante.ubicacion.idUbicacion,
-                        motivo: data.motivo,
-                        observaciones: data.observaciones
-                    },
-                })
+        if (result?.findSolicitudById) {
+            const data: SolicitudByID = result.findSolicitudById;
 
-                const rows: ItemTable[] = data.detalleSolicitud.map((item, i) => {
-                    return {
-                        id: Number(i),
-                        codigoProducto: String(item.producto.codigoProducto),
-                        nombreProducto: String(item.producto.nombreProducto),
-                        precioUnitario: item.precioUnitario,
-                        idProducto: item.idProducto,
-                        idSolicitud: item.idSolicitud,
-                        idDetalleSolicitud: item.idDetalleSolicitud,
-                        cantidad: item.cantidad,
-                        total: Number(item.precioUnitario * item.cantidad),
-                        observaciones: item.observaciones ?? null,
-                    }
-                })
-
-                setRows(rows)
-            }
-        }
-    )
-
-    async function getBodegas(id: number, type: "solicitada" | "solicitante") {
-        try {
-            const bodegas = await requestGraph.queryGraph(
-                queries.GET_BODEGAS_COMBOBOX,
-                { idUbicacion: id }
-            )
-
-            if (bodegas.findAllBodegasCombobox) {
-                const bodegasList: ListOption[] = bodegas.findAllBodegasCombobox.map((item: {
-                    idBodega: number,
-                    codigoBodega: string,
-                    nombreBodega: string,
-                    descripcion?: string | null
-                }) => {
-                    return {
-                        id: item.idBodega,
-                        label: `${item.codigoBodega} - ${item.nombreBodega}`,
-                        codigo: item.codigoBodega,
-                        descripcion: item.descripcion
-                    }
-                })
-
-                switch (type) {
-                    case 'solicitante':
-                        setBodegas(bodegasList)
-                        break;
-                    case 'solicitada':
-                        setBodegasSolicitadas(bodegasList)
-                        break;
-                    default:
-                        break;
+            const rows: ItemTable[] = data.detalleSolicitud.map((item, i) => {
+                return {
+                    id: Number(i),
+                    codigoProducto: String(item.producto.codigoProducto),
+                    nombreProducto: String(item.producto.nombreProducto),
+                    precioUnitario: item.precioUnitario,
+                    idProducto: item.idProducto,
+                    idSolicitud: item.idSolicitud,
+                    idDetalleSolicitud: item.idDetalleSolicitud,
+                    cantidad: item.cantidad,
+                    total: Number(item.precioUnitario * item.cantidad),
+                    observaciones: item.observaciones ?? null,
                 }
-            }
+            })
 
-        } catch (error) {
-            console.log(error);
+            setRows(rows)
         }
     }
 
-    const getCodigoSolicitud = useCallback(async () => {
-        const result = await requestHttp.getCodigoSolicitud()
-        setValue('solicitud.codigoSolicitud', result?.code)
+
+    const getCodigoOrdenes = useCallback(async () => {
+        const result = await requestHttp.getCodigoOrdenes()
+        setValue('orden.codigoOrden', result?.code)
     }, [setValue])
 
-    const load = useCallback(async (alive: boolean) => {
-        try {
-            setLoading(true)
-            const result2 = await requestGraph.queryGraph(
-                queries.GET_INVENTARIO_COMBOBOX,
-            )
-            setLoading(false)
-
-            if (!alive) return
-
-            if (result2.findInventarios) {
-                const foundInventarios = result2.findInventarios
-                setInventarios(foundInventarios.map((item: InventarioCombobox) => {
-                    return {
-                        label: `${item.codigoInventario} - ${item.nombreInventario}`,
-                        id: Number(item.idInventario),
-                    }
-                }))
-            }
-        } catch (error) {
-            console.error("Error cargando productos:", error);
-            setLoading(false)
-        } finally {
-            if (alive) setLoading(false);
-        }
-    }, [])
-
     useEffect(() => {
-        let alive = true
-
         if (!isEdit) {
-            getCodigoSolicitud()
+            getCodigoOrdenes()
         }
-
-        load(alive)
-
-        return () => {
-            alive = false
-        }
-    }, [getCodigoSolicitud, load, isEdit])
+    }, [getCodigoOrdenes, isEdit])
 
     return (
         <Fade in>
@@ -625,7 +597,7 @@ export default function CreateSolicitud() {
                     alignItems: 'center'
                 }}>
                     <Typography variant="h6" fontWeight={600}>
-                        { isEdit ? 'Editar Solicitud' : 'Nueva Solicitud' }
+                        { isEdit ? 'Editar Orden' : 'Nueva Orden' }
                     </Typography>
 
                     <Box sx={{ flexGrow: 1 }} />
@@ -676,18 +648,18 @@ export default function CreateSolicitud() {
                                 <Grid container spacing={2} sx={{ py: 1 }}>
                                     <Grid size={{ xs: 12, md: 6, lg: 6 }}>
                                         <Controller
-                                            name="solicitud.codigoSolicitud"
+                                            name="orden.codigoOrden"
                                             control={control}
                                             render={({ field }) => (
                                                 <TextField
                                                     {...field}
-                                                    id="codigoSolicitud"
+                                                    id="codigoOrden"
                                                     type="text"
                                                     size="small"
-                                                    label="Código de Solicitud"
-                                                    placeholder="Código de Solicitud"
-                                                    error={!!errors.solicitud?.codigoSolicitud}
-                                                    helperText={errors.solicitud?.codigoSolicitud?.message}
+                                                    label="Código de Orden"
+                                                    placeholder="Código de Orden"
+                                                    error={!!errors.orden?.codigoOrden}
+                                                    helperText={errors.orden?.codigoOrden?.message}
                                                     fullWidth
                                                     variant="outlined"
                                                     slotProps={{
@@ -711,18 +683,18 @@ export default function CreateSolicitud() {
 
                                     <Grid size={{ xs: 12, md: 6, lg: 6 }}>
                                         <Controller
-                                            name="solicitud.solicitante"
+                                            name="orden.noReferencia"
                                             control={control}
                                             render={({ field }) => (
                                                 <TextField
                                                     {...field}
-                                                    id="solicitante"
+                                                    id="noReferencia"
                                                     type="text"
                                                     size="small"
-                                                    label="Solicitante"
-                                                    placeholder="Ingrese el nombre del solicitante"
-                                                    error={!!errors.solicitud?.solicitante}
-                                                    helperText={errors.solicitud?.solicitante?.message}
+                                                    label="Número de Referencia"
+                                                    placeholder="Ingrese el número de referencia"
+                                                    error={!!errors.orden?.noReferencia}
+                                                    helperText={errors.orden?.noReferencia?.message}
                                                     fullWidth
                                                     variant="outlined"
                                                     slotProps={{
@@ -743,36 +715,40 @@ export default function CreateSolicitud() {
 
                                     <Grid size={{ xs: 12, md: 12, lg: 12 }}>
                                         <Controller
-                                            name="solicitud.idTipoSolicitud"
+                                            name="orden.idSolicitud"
                                             control={control}
                                             render={({ field }) => (
                                                 <Autocomplete
-                                                    id="idTipoSolicitud"
+                                                    id="idSolicitud"
                                                     size="small"
                                                     fullWidth
-                                                    value={tipoSolicitud.find(t => t.id === field.value) || null}
+                                                    readOnly={isEdit}
+                                                    value={solicitudes.find(t => t.id === field.value) || null}
                                                     getOptionLabel={(option) => option?.label ?? ""}
-                                                    options={tipoSolicitud}
+                                                    options={solicitudes}
                                                     onChange={(_, data) => {
-                                                        if (data) {
-                                                            const id = data?.id
-                                                            field.onChange(id)
-                                                        }
+                                                        const id = Number(data?.id)
+                                                        field.onChange(id)
 
+                                                        getSolicitudById(id)
                                                     }}
                                                     renderInput={(params) =>
                                                         <TextField
                                                             {...params}
+                                                            id="idSolicitud"
                                                             type="text"
                                                             size="small"
-                                                            label="Tipo de Solictud"
-                                                            placeholder="Elija un tipo de solicitud"
-                                                            error={!!errors.solicitud?.idTipoSolicitud}
-                                                            helperText={errors.solicitud?.idTipoSolicitud?.message}
+                                                            label="Solicitud"
+                                                            placeholder="Elija la una solicitud"
+                                                            error={!!errors.orden?.idSolicitud}
+                                                            helperText={errors.orden?.idSolicitud?.message}
                                                             slotProps={{
                                                                 inputLabel: {
                                                                     shrink: true
                                                                 },
+                                                                input: {
+                                                                    ...params?.InputProps,
+                                                                }
                                                             }}
                                                             sx={{
                                                                 "& .MuiOutlinedInput-root": {
@@ -787,255 +763,75 @@ export default function CreateSolicitud() {
                                         </Controller>
                                     </Grid>
 
-
-                                    <Grid container size={{ xs: 12, md: 12, lg: 12 }}>
-                                        <Box
-                                            sx={{
-                                                width: '100%',
-                                                height: '100%',
-                                                border: "1px solid",
-                                                borderColor: 'divider',
-                                                p: 1,
-                                                borderRadius: .5,
-                                            }}
-                                        >
-                                            <Typography
-                                                component="h6"
-                                                variant="body1"
-                                            >
-                                                Bodega Solicitante
-                                            </Typography>
-
-                                            <Divider />
-
-                                            <Grid container spacing={2} py={1} size={{ xs: 12, md: 12, lg: 12 }}>
-                                                <Grid size={{ xs: 12, md: 6, lg: 6 }}>
-                                                    <Controller
-                                                        name="solicitud.idUbicacionSolicitante"
-                                                        control={control}
-                                                        render={({ field, fieldState }) => (
-                                                            <FormControl
-                                                                fullWidth
-                                                                error={!!fieldState.error}
-                                                            >
-                                                                <InputLabel>Ubicación Solicitante</InputLabel>
-                                                                <Select
-                                                                    {...field}
-                                                                    id="idUbicacionSolicitante"
-                                                                    label="Ubicación Solicitante"
-                                                                    size="small"
-                                                                    error={!!fieldState.error}
-                                                                    onChange={(e) => {
-                                                                        field.onChange(e)
-                                                                        const idUbicacion = Number(e.target.value)
-
-                                                                        if (idUbicacion !== 0) {
-                                                                            getBodegas(idUbicacion, 'solicitante')
-                                                                        }
-                                                                    }}
-                                                                    sx={{
-                                                                        "&.MuiOutlinedInput-root": {
-                                                                            borderRadius: 0.5
-                                                                        }
-                                                                    }}
-                                                                    slotProps={{
-                                                                        input: {
-                                                                            readOnly: false
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <MenuItem value={0}>
-                                                                        <em>Elija una ubicación</em>
-                                                                    </MenuItem>
-                                                                    {ubicaciones?.map((item: ListOption) => (
-                                                                        <MenuItem defaultValue={1} value={item.id} sx={{
-                                                                            display: 'flex',
-                                                                            flexDirection: 'column',
-                                                                            alignItems: 'start'
-                                                                        }}>
-                                                                            { item.label }
-                                                                            <Typography variant="body2" color="text.secondary">
-                                                                                {`${item?.description}`}
-                                                                            </Typography>
-                                                                        </MenuItem>
-                                                                    ))}
-                                                                </Select>
-                                                                <FormHelperText>
-                                                                    {fieldState.error?.message}
-                                                                </FormHelperText>
-                                                            </FormControl>
-                                                        )}
-                                                    />
-                                                </Grid>
-
-                                                <Grid size={{ xs: 12, md: 6, lg: 6 }}>
-                                                    <Controller
-                                                        name="solicitud.idBodegaSolicitante"
-                                                        control={control}
-                                                        render={({ field }) => (
-                                                            <Autocomplete
-                                                                id="idBodegaSolicitante"
-                                                                size="small"
-                                                                fullWidth
-                                                                value={bodegas.find(t => t.id === field.value) || null}
-                                                                getOptionLabel={(option) => option?.label ?? ""}
-                                                                options={bodegas}
-                                                                onChange={(_, data) => {
-                                                                    const id = Number(data?.id)
-                                                                    field.onChange(id)
-                                                                }}
-                                                                renderInput={(params) =>
-                                                                    <TextField
-                                                                        {...params}
-                                                                        id="idBodegaSolicitante"
-                                                                        type="text"
-                                                                        size="small"
-                                                                        label="Bodega Solicitante"
-                                                                        placeholder="Bodega que solicita"
-                                                                        error={!!errors.solicitud?.idBodegaSolicitante}
-                                                                        helperText={errors.solicitud?.idBodegaSolicitante?.message}
-                                                                        slotProps={{
-                                                                            inputLabel: {
-                                                                                shrink: true
-                                                                            },
-                                                                        }}
-                                                                        sx={{
-                                                                            "& .MuiOutlinedInput-root": {
-                                                                                borderRadius: 0.5
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                }
-                                                            />
-                                                        )}
+                                    <Grid size={{ xs: 12, md: 6, lg: 6 }}>
+                                        <Controller
+                                            name="orden.idTipoOrden"
+                                            control={control}
+                                            render={({ field, fieldState }) => (
+                                                <FormControl
+                                                    fullWidth
+                                                    error={!!fieldState.error}
+                                                >
+                                                    <InputLabel>Tipo de Orden</InputLabel>
+                                                    <Select
+                                                        {...field}
+                                                        id="idTipoOrden"
+                                                        label="Tipo de Orden"
+                                                        size="small"
+                                                        error={!!fieldState.error}
+                                                        onChange={(e) => {
+                                                            field.onChange(e)
+                                                        }}
+                                                        sx={{
+                                                            "&.MuiOutlinedInput-root": {
+                                                                borderRadius: 0.5
+                                                            }
+                                                        }}
+                                                        slotProps={{
+                                                            input: {
+                                                                readOnly: false
+                                                            }
+                                                        }}
                                                     >
-                                                    </Controller>
-                                                </Grid>
-
-                                                <Grid size={{ xs: 12, md: 6, lg: 6 }}>
-                                                    <Controller
-                                                        name="solicitud.idUbicacionSolicitada"
-                                                        control={control}
-                                                        render={({ field, fieldState }) => (
-                                                            <FormControl
-                                                                fullWidth
-                                                                error={!!fieldState.error}
-                                                            >
-                                                                <InputLabel>Ubicación Solicitada</InputLabel>
-                                                                <Select
-                                                                    {...field}
-                                                                    id="idUbicacionSolicitada"
-                                                                    label="Ubicación Solicitada"
-                                                                    size="small"
-                                                                    error={!!fieldState.error}
-                                                                    onChange={(e) => {
-                                                                        field.onChange(e)
-                                                                        const idUbicacion = Number(e.target.value)
-
-                                                                        if (idUbicacion !== 0) {
-                                                                            getBodegas(idUbicacion, 'solicitada')
-                                                                        }
-                                                                    }}
-                                                                    sx={{
-                                                                        "&.MuiOutlinedInput-root": {
-                                                                            borderRadius: 0.5
-                                                                        }
-                                                                    }}
-                                                                    slotProps={{
-                                                                        input: {
-                                                                            readOnly: false
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <MenuItem value={0}>
-                                                                        <em>Elija una ubicación</em>
-                                                                    </MenuItem>
-                                                                    {ubicaciones?.map((item: ListOption) => (
-                                                                        <MenuItem defaultValue={1} value={item.id} sx={{
-                                                                            display: 'flex',
-                                                                            flexDirection: 'column',
-                                                                            alignItems: 'start'
-                                                                        }}>
-                                                                            { item.label }
-                                                                            <Typography variant="body2" color="text.secondary">
-                                                                                {`${item?.description}`}
-                                                                            </Typography>
-                                                                        </MenuItem>
-                                                                    ))}
-                                                                </Select>
-                                                                <FormHelperText>
-                                                                    {fieldState.error?.message}
-                                                                </FormHelperText>
-                                                            </FormControl>
-                                                        )}
-                                                    />
-                                                </Grid>
-
-                                                <Grid size={{ xs: 12, md: 6, lg: 6 }}>
-                                                    <Controller
-                                                        name="solicitud.idBodegaSolicitada"
-                                                        control={control}
-                                                        render={({ field }) => (
-                                                            <Autocomplete
-                                                                id="idBodegaSolicitada"
-                                                                size="small"
-                                                                fullWidth
-                                                                value={bodegasSolicitadas.find(t => t.id === field.value) || null}
-                                                                getOptionLabel={(option) => option?.label ?? ""}
-                                                                onChange={(_, data) => {
-                                                                    const id = Number(data?.id)
-                                                                    field.onChange(id)
-                                                                }}
-                                                                options={bodegasSolicitadas}
-                                                                renderInput={(params) =>
-                                                                    <TextField
-                                                                        {...params}
-                                                                        id="idBodegaSolicitada"
-                                                                        type="text"
-                                                                        size="small"
-                                                                        label="Bodega Solicitada"
-                                                                        placeholder="Bodega que solicita"
-                                                                        error={!!errors.solicitud?.idBodegaSolicitada}
-                                                                        helperText={errors.solicitud?.idBodegaSolicitada?.message}
-                                                                        slotProps={{
-                                                                            inputLabel: {
-                                                                                shrink: true
-                                                                            },
-                                                                        }}
-                                                                        sx={{
-                                                                            "& .MuiOutlinedInput-root": {
-                                                                                borderRadius: 0.5
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                }
-                                                            />
-                                                        )}
-                                                    >
-                                                    </Controller>
-                                                </Grid>
-                                            </Grid>
-                                        </Box>
-
+                                                        <MenuItem value={0}>
+                                                            <em>Elija un tipo de orden</em>
+                                                        </MenuItem>
+                                                        {tipoOrden?.map((item: ListOption) => (
+                                                            <MenuItem defaultValue={1} value={item.id} sx={{
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                alignItems: 'start'
+                                                            }}>
+                                                                { item.label }
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    {`${item?.description}`}
+                                                                </Typography>
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                    <FormHelperText>
+                                                        {fieldState.error?.message}
+                                                    </FormHelperText>
+                                                </FormControl>
+                                            )}
+                                        />
                                     </Grid>
 
                                     <Grid size={{ xs: 12, md: 6, lg: 6 }}>
                                         <Controller
-                                            name="solicitud.motivo"
+                                            name="orden.fechaEmision"
                                             control={control}
                                             render={({ field }) => (
                                                 <TextField
                                                     {...field}
-                                                    id="motivo"
-                                                    type="text"
+                                                    id="fechaEmision"
+                                                    type="datetime-local"
                                                     size="small"
-                                                    label="Motivo de la solicitud"
-                                                    placeholder="Ingrese el motivo de la solicitud"
-                                                    error={!!errors.solicitud?.motivo}
-                                                    helperText={errors.solicitud?.motivo?.message}
+                                                    label="Fecha de Emisión"
+                                                    placeholder="Ingrese la fecha de emisión"
+                                                    error={!!errors.orden?.fechaEmision}
+                                                    helperText={errors.orden?.fechaEmision?.message}
                                                     fullWidth
-                                                    multiline
-                                                    rows={4}
                                                     variant="outlined"
                                                     slotProps={{
                                                         inputLabel: {
@@ -1053,9 +849,10 @@ export default function CreateSolicitud() {
                                         </Controller>
                                     </Grid>
 
-                                    <Grid size={{ xs: 12, md: 6, lg: 6 }}>
+
+                                    <Grid size={{ xs: 12, md: 12, lg: 12 }}>
                                         <Controller
-                                            name="solicitud.observaciones"
+                                            name="orden.observaciones"
                                             control={control}
                                             render={({ field }) => (
                                                 <TextField
@@ -1065,8 +862,8 @@ export default function CreateSolicitud() {
                                                     size="small"
                                                     label="Observaciones"
                                                     placeholder="Ingrese algunas observaciones"
-                                                    error={!!errors.solicitud?.observaciones}
-                                                    helperText={errors.solicitud?.observaciones?.message}
+                                                    error={!!errors.orden?.observaciones}
+                                                    helperText={errors.orden?.observaciones?.message}
                                                     fullWidth
                                                     multiline
                                                     rows={4}
@@ -1086,9 +883,50 @@ export default function CreateSolicitud() {
                                         >
                                         </Controller>
                                     </Grid>
+
+                                    <Grid size={{ xs: 12, md: 12, lg: 12 }}>
+                                            <Box
+                                                sx={{
+                                                    width: '100%',
+                                                    height: '250px',
+                                                    mt: 2
+                                                }}
+                                            >
+                                                <DataGridPremium
+                                                    loading={loading}
+                                                    rows={rows}
+                                                    columns={headerColumns}
+                                                    processRowUpdate={processRowUpdate}
+                                                    apiRef={apiRef}
+                                                    density="compact"
+                                                    pageSizeOptions={[5, 10]}
+                                                    sx={{
+                                                        '& .classname--header': {
+                                                            backgroundColor: '#F2F2F2',
+                                                        },
+                                                        '& .classname--cell': {
+                                                            p: 0,
+                                                        },
+                                                        '& .classname--cellOpc': {
+                                                            display: 'flex',
+                                                            p: 0,
+                                                            justifyContent: 'center',
+                                                        },
+                                                        '& .classname--headerOpc': {
+                                                            display: 'flex',
+                                                            p: 0,
+                                                            justifyContent: 'center',
+                                                        }
+                                                    }}
+                                                />
+                                            </Box>
+                                    </Grid>
                                 </Grid>
                             </Box>
                         </Grid>
+
+
+                        {/* DETAILS */}
 
                         <Grid size={{ xs: 12, md: 4, lg: 4 }}>
                             <Box component="form"
@@ -1256,6 +1094,7 @@ export default function CreateSolicitud() {
                                                     id="cantidad"
                                                     label="Cantidad"
                                                     size="small"
+                                                    readOnly={isEdit}
                                                     error={!!errors.details?.cantidad}
                                                     onValueChange={(value) => {
                                                         field.onChange(value)
@@ -1398,44 +1237,6 @@ export default function CreateSolicitud() {
 
                 <Box
                     sx={{
-                        width: '100%',
-                        height: '100%',
-                        mt: 2,
-                    }}
-                >
-                    <Box
-                        sx={{
-                            p: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <Typography variant="h6" fontWeight={600}>
-                            Detalles de la Solicitud
-                        </Typography>
-                    </Box>
-
-                    <DataGridPremium
-                        rows={rows}
-                        columns={headerColumns}
-                        processRowUpdate={processRowUpdate}
-                        apiRef={apiRef}
-                        density="compact"
-                        pageSizeOptions={[5, 10]}
-                        sx={{
-                            '& .classname--header': {
-                                backgroundColor: '#F2F2F2',
-                            },
-                            '& .classname--cell': {
-                                p: 0,
-                            }
-                        }}
-                    />
-                </Box>
-
-                <Box
-                    sx={{
                         mt: 2,
                         display: "flex",
                         justifyContent: "end",
@@ -1471,8 +1272,6 @@ export default function CreateSolicitud() {
                 {openAlert && (
                     <AlertComp severity={severityAlert} message={msgAlert}/>
                 )}
-
-                <LoadingOverlay isLoading={isLoading} />
             </Container>
         </Fade>
     )

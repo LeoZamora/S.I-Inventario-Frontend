@@ -16,8 +16,10 @@ import {
     CompareArrowsRounded, ReceiptLong,
 } from "@mui/icons-material";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useNavigationContext, useInventarioContext } from "../context/Inventario.context";
+import { authSlice } from "../appStore/slices/slices";
+import { useAppDispatch } from "../appStore/hooks/hook";
 
 type Props = {
     open: boolean,
@@ -71,7 +73,10 @@ const StyledListItemIcon = styled(ListItemIcon)(() => ({
 }));
 
 export default function AppDrawer({ open, drawerWidth, onClose, onClick }: Props) {
+    const dispatch = useAppDispatch()
+    const { logout } = authSlice.actions
     const theme = useTheme();
+    const navigate = useNavigate()
     const { opcNavigation, setOpcNavigation } = useNavigationContext()
     const { setSelected } = useInventarioContext()
     const [selectedOption, setSelectedOpc] = useState(opcNavigation?.title)
@@ -89,14 +94,13 @@ export default function AppDrawer({ open, drawerWidth, onClose, onClick }: Props
         { text: 'Mov. Inventario', icon: <CompareArrowsRounded />,
             selected: false, route: '/movimientos-inventario', subRoute: null,
             subItems: [
-                { text: 'Solicitudes', icon: <PendingActions />,
+                { text: 'Solicitudes', icon: <PendingActions />, type: 'sol',
                     selected: false, route: '/solicitudes', subRoute: '/solicitudes'
                 },
-                { text: 'Órdenes', icon: <ReceiptLong />,
+                { text: 'Órdenes', icon: <ReceiptLong />, type: 'ord',
                     selected: false, route: '/ordenes', subRoute: '/ordenes'
                 },
             ],
-            type: 'sol',
             expand: true
         },
     ];
@@ -220,7 +224,7 @@ export default function AppDrawer({ open, drawerWidth, onClose, onClick }: Props
                                 >
                                     <StyledListItemButton selected={selectedOption === item.text}
                                         onClick={() => {
-                                            onClick(item.type)
+                                            onClick(item.type ?? "")
                                             setSelectedOpc(item.text)
                                             if (item.expand) {
                                                 setOpenOpc(!openOption)
@@ -267,12 +271,14 @@ export default function AppDrawer({ open, drawerWidth, onClose, onClick }: Props
                                             <Link to={subItem.route} key={j}>
                                                 <ListItem component="div" disablePadding
                                                     onClick={() => {
-                                                        onClick(item.type)
+                                                        onClick(subItem.type)
                                                         localStorage.setItem('lastOption', subItem.text)
                                                     }}
                                                 >
                                                     <StyledListItemButton selected={selectedOption === subItem.text}
-                                                        onClick={() => setSelectedOpc(subItem.text)}>
+                                                        onClick={() => {
+                                                            setSelectedOpc(subItem.text)
+                                                        }}>
                                                         <StyledListItemIcon sx={{ ml: 2 }}>
                                                             {subItem.icon}
                                                         </StyledListItemIcon>
@@ -296,7 +302,10 @@ export default function AppDrawer({ open, drawerWidth, onClose, onClick }: Props
                 <List sx={{ px: 1, color: 'black'}} dense>
                     {userMenuItems.map((item, i) => (
                         <ListItem key={i} disablePadding>
-                            <StyledListItemButton
+                            <StyledListItemButton onClick={() => {
+                                dispatch(logout())
+                                navigate('/login', { replace: true })
+                            }}
                                 sx={{
                                     borderRadius: 10,
                                     '&:hover': {
